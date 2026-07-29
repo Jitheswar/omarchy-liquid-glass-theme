@@ -1,9 +1,9 @@
 # Liquid Glass — btop
 #
 # Shipped rather than generated. Omarchy builds btop.theme from colors.toml
-# when a theme does not provide one, and colors.toml is still the jade palette
-# because terminals and syntax need hue. btop is not syntax, so it follows the
-# surfaces instead and carries no decorative colour.
+# when a theme does not provide one, and what it builds is driven by the ANSI
+# hues that file keeps for terminals and syntax. btop is not syntax, so it
+# follows the surfaces instead and carries no decorative colour.
 #
 # What stays coloured is what actually means something. The temperature ramp is
 # Green -> Yellow -> Red because that is a reading, not a decoration, and the

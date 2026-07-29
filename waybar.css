@@ -206,7 +206,10 @@ window#waybar > box {
  * something.
  *
  * The far-left launcher is the exception: it is a button rather than a
- * readout, and jade marks it as the one thing here you press. */
+ * readout, so it sits at full white while the readouts sit at @foreground.
+ * That used to be a hue and is now 18 points of brightness — deliberately
+ * quiet, and about as far as "emphasis is brightness, not colour" can be
+ * pushed when the readouts are already near-white. */
 #custom-omarchy {
   color: @accent;
 }

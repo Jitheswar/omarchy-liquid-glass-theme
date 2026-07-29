@@ -100,6 +100,32 @@ two shape properties in the same position, `shadow_passes` and
 `outline_thickness`, are documented with suggested values at the top of
 `hyprlock.conf`.
 
+### Two files Omarchy will not install for you
+
+Both are optional and the theme is coherent without them. Both need the repo
+checked out somewhere — `omarchy theme install` leaves a clone at
+`~/.config/omarchy/themes/liquid-glass`, so that path works.
+
+**`gtk.css` — translucent GTK4 windows.** Omarchy applies no theme `gtk.css`
+at all, so this one has to be copied:
+
+```bash
+cp ~/.config/omarchy/themes/liquid-glass/gtk.css ~/.config/gtk-4.0/gtk.css
+```
+
+Without it the glass folder icons cannot work. They carry no colour and take
+the colour of whatever is behind them, which inside a file manager is the file
+manager's own opaque background — so they render grey no matter what the
+wallpaper is. Log out and back in, or restart the app. Copied rather than
+`@import`ed from the current-theme path on purpose: that path is rewritten on
+every theme switch, and the next theme will not have a `gtk.css` in it.
+
+**`icons/` — the glass folders.** See `icons/README.md`; it is a `cp -r` and a
+`gtk-update-icon-cache`. `icons.theme` already points GNOME at the result, so
+the icons appear as soon as the directory exists.
+
+### Manual install
+
 Or clone it into place and switch manually:
 
 ```bash
@@ -189,30 +215,32 @@ whatever you were looking at, and over a white document the page behind used
 to lift the panel to near-white and take the near-white text with it. Two
 things push back: a dark halo behind the glyphs, which costs nothing against
 the wallpaper because it *is* the wallpaper's colour, and a launcher fill at
-`0.60` rather than `0.30` — a deliberate exception to clear-not-frosted,
-documented at the site in `walker.css`. Measured over a blank white window:
+`0.44` rather than `0.30` — a deliberate exception to clear-not-frosted,
+documented at the site in `walker.css`. Measured over a blank white window,
+item labels went from 2.3–3.1:1 to 4.1–4.8:1, which clears roughly WCAG AA.
 
-| | before | after |
-|---|---|---|
-| item labels | 2.3–3.1:1 | 4.4–5.5:1 |
-| selected row label | 1.0:1 | 2.9:1 |
-| search placeholder | 1.3:1 | 1.8:1 |
-
-Body text clears roughly WCAG AA now.
+That fill has been wrong in both directions, and the fix was not the one that
+looks obvious. At 0.55 it bought contrast and read as a dark slab — the most
+opaque surface in a theme whose whole argument is that you can see through it.
+At 0.34 it looked right and put body text at 3.2:1. What actually reads as
+glass is the rim and the specular, not how thin the body is, so once those
+were pushed past their tokens the fill was free to sit where legibility needed
+it. The full sweep is in `walker.css`.
 
 The selected row took a second fix of its own. Omarchy's stylesheet paints its
-label with the accent, which on a pill this theme had *also* tinted was low contrast
-on every backdrop — 2.9:1 even over the wallpaper, where nothing is washing it
-out. That label is now the same near-white as every other row, and the pill's
-own tint and specular edge carry the "selected" signal instead, which they
-were already doing anyway. Over the wallpaper it went 2.9:1 → **5.0:1**, which
-clears AA outright; over a white window, 1.7:1 → 2.9:1.
+label with the accent, which back when that accent was jade — on a pill this
+theme had *also* tinted jade — was low contrast on every backdrop, 2.9:1 even
+over the wallpaper, where nothing is washing it out. That label is now the
+same near-white as every other row, and the pill's lit gradient and specular
+edge carry the "selected" signal instead, which they were already doing
+anyway. Over the wallpaper it went 2.9:1 → **5.0:1**, which clears AA
+outright; over a white window, 1.7:1 → 2.9:1.
 
-The two that remain short are short by construction. The placeholder is
-deliberately half-opacity, and the selected row still trails the others over
-white because the pill it sits on is *lighter* than the panel — a lit
-selection and a light backdrop pull in the same direction. Raising the fill
-does nothing for either.
+Two things stay short of AA over white, and both are short by construction.
+The search placeholder is deliberately half-opacity. The selected row trails
+the ordinary rows because the pill it sits on is *lighter* than the panel — a
+lit selection and a light backdrop pull in the same direction. Raising the
+fill does nothing for either.
 
 **Known limitation:** GTK-CSS cannot sample what is behind a surface, so no
 part of this can adapt to the backdrop — there is no `backdrop-luminance` to
@@ -245,10 +273,13 @@ to trade that for lower GPU load.
 | `alacritty.toml`, `ghostty.conf`, `kitty.conf`, `foot.ini` | full palette + background alpha |
 | `neovim.lua` | aether.nvim fed this exact palette, transparent background |
 | `hyprlock.conf` | translucent lock field over the blurred wallpaper |
-| `backgrounds/` | three wallpapers |
+| `gtk.css` | translucent GTK4 window backgrounds — **install by hand**, see below |
+| `icons/` | hueless glass folder icons — **install by hand**, see `icons/README.md` |
+| `backgrounds/` | six wallpapers |
 
-Each of those files carries a comment explaining *why* it overrides Omarchy's
-generated template — worth reading before changing one.
+Each of those files carries a comment explaining *why* it looks the way it
+does — for most of them, why they override Omarchy's generated template —
+worth reading before changing one.
 
 ## Tuning
 
@@ -303,6 +334,24 @@ That covers the compositor. The bar and the launcher animate in GTK-CSS, which
 `transition:` line in each, or drop the cubic-bezier for a plain `linear`, and
 run `omarchy restart waybar`.
 
+### Making the launcher settle like everything else
+
+The `layersIn`/`layersOut` curves in `hyprland.conf` reach the OSD,
+notifications, the logout dialog and the bar — but not walker. Omarchy ships
+`layerrule = no_anim on, match:namespace walker`, and it is sourced before the
+theme, so the launcher opens instantly while every other surface eases in.
+
+That is upstream's call about how fast a launcher should feel, so the theme
+leaves it alone. To take it back:
+
+```ini
+layerrule = no_anim off, match:namespace walker
+```
+
+Later rules win, so this belongs in `looknfeel.conf` like everything else in
+this section. Blur and the `ignore_alpha` threshold already apply to walker
+either way — `no_anim` only governs animation.
+
 ### Frost instead of clear
 
 Want it frosted instead of clear? Push the two settings that define the
@@ -347,8 +396,13 @@ softer than the jade original on a 1080p panel.
 ## Notes
 
 - Icons are the theme's own hueless glass folders (`icons/`), inheriting
-  everything else from `Yaru-prussiangreen-dark`. They need a one-time manual
-  install — see `icons/README.md`.
+  everything else from `Yaru-prussiangreen-dark`. That inherited set does carry
+  a hue, but the icons Yaru actually tints are the folders, and those are the
+  ones overridden here — including `user-desktop`, `folder-new` and
+  `folder-drag-accept`, which are easy to miss because nothing names them
+  "folder". What is left green is a handful of accented arrows and the
+  third-party folders (`folder-dropbox`, `insync-folder`), which are better
+  off staying identifiable.
 - VS Code points at **Ocean Green: Dark** (`jovejonovski.ocean-green`), the
   closest dark theme on the marketplace; Omarchy installs it on first switch.
 - Neovim needs `bjarneo/aether.nvim`, which LazyVim will fetch on next start.
