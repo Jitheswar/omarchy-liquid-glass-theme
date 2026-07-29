@@ -8,7 +8,7 @@ on a dark background, and a dark underside plus a drop shadow give it an edge
 on a light one. At least one of the two is always doing the work.
 """
 
-def folder(glyph="", open_=False):
+def folder(glyph=""):
     tab_y = 15
     top = 23
     return f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
@@ -114,18 +114,51 @@ GLYPHS = {
         '<path d="M25.5 37 L32 31 l6.5 6"/><path d="M27.5 38.5 V44 h9 v-5.5"/></g>',
 }
 
+# Names file managers ask for that are the same drawing under another label.
+# folder-open is in here deliberately: an open folder in this material would
+# have to be a *different shape*, and a shape with a gaping front is exactly
+# where a hueless glass icon stops being legible — there is no fill left to
+# carry the rim. Same icon is the better answer than a worse one.
+ALIASES = (
+    ("folder-open", "folder"),
+    ("folder-downloads", "folder-download"),
+    ("folder-video", "folder-videos"),
+    ("folder-image", "folder-pictures"),
+    ("folder-images", "folder-pictures"),
+    ("folder-document", "folder-documents"),
+    ("folder-publicshare", "folder"),
+    ("folder-templates", "folder"),
+    ("folder-remote", "folder"),
+    ("folder-visiting", "folder"),
+    ("folder-desktop", "folder"),
+    ("inode-directory", "folder"),
+    # The three below were the last coloured folders on the desktop. Yaru ships
+    # each of them as a colour-variant icon, so with nothing here they fell
+    # through to the inherited prussian-green set and sat next to the glass
+    # ones. user-desktop is the freedesktop icon-naming spec name for the
+    # Desktop folder — folder-desktop above is a guess nothing actually asks
+    # for, and is kept only because it costs nothing.
+    ("user-desktop", "folder"),
+    ("folder-new", "folder"),
+    # Shown while a drag hovers a drop target. Yaru uses an open folder for
+    # this; an open folder in a hueless material has no fill left to carry the
+    # rim, so it borrows the download glyph instead — an arrow going into a
+    # folder is the same reading and stays in the material. It never appears
+    # beside a real Downloads folder, so the collision does not cost anything.
+    ("folder-drag-accept", "folder-download"),
+)
+
 if __name__ == "__main__":
-    import sys, os
+    import os
+    import sys
+
     out = sys.argv[1]
     os.makedirs(out, exist_ok=True)
-    for name, g in GLYPHS.items():
-        open(os.path.join(out, name + ".svg"), "w").write(folder(g))
-    # aliases that file managers ask for by other names
-    for alias, src in (("folder-open", "folder"), ("folder-downloads", "folder-download"),
-                       ("folder-video", "folder-videos"), ("folder-image", "folder-pictures"),
-                       ("folder-images", "folder-pictures"), ("folder-document", "folder-documents"),
-                       ("folder-publicshare", "folder"), ("folder-templates", "folder"),
-                       ("folder-remote", "folder"), ("folder-visiting", "folder"),
-                       ("folder-desktop", "folder"), ("inode-directory", "folder")):
-        open(os.path.join(out, alias + ".svg"), "w").write(folder(GLYPHS[src]))
-    print("wrote", len(os.listdir(out)), "svg files to", out)
+
+    written = 0
+    for name, glyph in list(GLYPHS.items()) + [(a, GLYPHS[src]) for a, src in ALIASES]:
+        with open(os.path.join(out, name + ".svg"), "w") as f:
+            f.write(folder(glyph))
+        written += 1
+
+    print("wrote", written, "svg files to", out)
