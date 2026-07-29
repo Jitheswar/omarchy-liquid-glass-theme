@@ -1,12 +1,22 @@
 # Liquid Glass
 
-A jade-glass theme for [Omarchy](https://omarchy.org/).
+A glass theme for [Omarchy](https://omarchy.org/).
 
-Most Omarchy themes are a palette. This one is a *material*: the palette is
-only half of it, and the other half is Hyprland's blur, a set of layer rules,
-and per-app background alpha working together so that windows, the bar, the
-launcher and notifications all read as translucent panes lit from the same
-direction.
+Most Omarchy themes are a palette. This one is a *material*, and the surfaces
+have no colour at all. The bar, launcher, OSD, notifications, lock field and
+window borders are built from white and black at low alpha and nothing else —
+so they take their colour from whatever is behind them. Over a green wallpaper
+the desktop is green; over a blue one it is blue; over a photograph it is
+whatever the photograph is. Nothing needs retuning per wallpaper, because
+there is nothing tinted to tune.
+
+That is what glass actually does, and it is the one thing a tinted theme
+cannot fake. The rest is Hyprland's blur, a set of layer rules and per-app
+background alpha, working together so every surface reads as a translucent
+pane lit from the same direction.
+
+The terminal and syntax palette is a separate matter and stays jade — hue is
+load-bearing there in a way it never was on a bar.
 
 ![Liquid Glass](backgrounds/1-omarchy-liquid-glass.png)
 
@@ -97,9 +107,14 @@ omarchy theme set "Liquid Glass"
 
 ## The palette
 
-Every colour was sampled out of `backgrounds/1-omarchy-liquid-glass.png`
-rather than picked by eye, so the desktop and the wallpaper share one light
-source.
+This drives terminals, syntax highlighting and everything Omarchy generates
+from `colors.toml` — **not** the desktop surfaces, which carry no colour. Every
+value was sampled out of `backgrounds/1-omarchy-liquid-glass.png` rather than
+picked by eye.
+
+Hue stays here because it is doing work that alpha cannot: `color1` has to be
+distinguishable from `color2` at a glance in a diff or a stack trace. On a bar
+it was only decoration, which is why it is gone from there.
 
 | Role | Colour | |
 |---|---|---|
@@ -134,9 +149,9 @@ wallpaper so it looks illuminated instead of smeared, and `vibrancy = 0.80`
 puts back the saturation a plain gaussian washes out, so colour bleeds through
 as refraction rather than grey.
 
-**The edge does most of the work.** A 3px border with a 90° gradient — near
-white at the top falling to near black at the base — reads as a bevel catching
-a single overhead light. At 1px it collapses into a plain outline. In the GTK
+**The edge does most of the work.** A 3px border with a 90° gradient — white
+at the top falling to black at the base, no hue in it — reads as a bevel
+catching a single overhead light. At 1px it collapses into a plain outline. In the GTK
 surfaces the same idea is an `inset 0 1px 0` highlight plus a vertical
 gradient body; remove that one inset shadow and the bar goes flat instantly.
 
