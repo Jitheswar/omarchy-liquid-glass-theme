@@ -1,5 +1,11 @@
 /* Liquid Glass — Waybar
  *
+ * Radii below follow the 4-step scale documented in colors.toml, and each one
+ * names its step. They are circular arcs approximating the superellipse the
+ * compositor gives windows (hyprland.conf: rounding_power = 4.5). GTK-CSS has
+ * no superellipse primitive, so that is as close as a panel can get — a
+ * platform ceiling, not a bug to fix.
+ *
  * Three things to know before editing this file.
  *
  * 1. ~/.config/waybar/style.css imports this file first, then paints every
@@ -54,6 +60,7 @@ window#waybar > box {
   margin: 4px 10px 4px 10px;
   padding: 0 4px;
   border: 1px solid @glass_edge;
+  /* radius-md (14px) — bar pill */
   border-radius: 14px;
 
   /* The specular edge, the shaded base, then the float. This trio is the
@@ -82,6 +89,7 @@ window#waybar > box {
  * ends up square. `:not()` takes the specificity of its argument, so tacking a
  * never-matching class on bumps these to (1,1,1) and they survive. */
 #workspaces button:not(.liquid-glass-never) {
+  /* radius-sm (9px) — workspace pill */
   border-radius: 9px;
   /* Vertical padding so the pill fills the taller bar instead of floating as a
      small chip in the middle of it. Overrides the stylesheet's `padding: 0 6px`. */
@@ -90,6 +98,7 @@ window#waybar > box {
 }
 
 #workspaces button.active {
+  /* radius-sm (9px) — workspace pill */
   border-radius: 9px;
   background-image: linear-gradient(
     to bottom,
@@ -108,7 +117,9 @@ window#waybar > box {
 }
 
 #workspaces button:hover {
-  border-radius: 8px;
+  /* radius-sm (9px) — workspace pill. Was 8px, which made the pill change
+     shape slightly between hover and active on the same widget. */
+  border-radius: 9px;
   /* Not glass-fill-top: a hover wash is a flat tint, not the top stop of a
      ramp. Kept well under the token so hover stays quieter than active. */
   background-color: rgba(190, 235, 220, 0.10);
@@ -132,7 +143,8 @@ tooltip {
   );
   background-color: rgba(10, 22, 19, 0.55);
   border: 1px solid @glass_edge;
-  border-radius: 12px;
+  /* radius-md (14px) — tooltip. Was 12px, off-scale for no reason. */
+  border-radius: 14px;
   padding: 4px;
   box-shadow:
     /* glass-specular */

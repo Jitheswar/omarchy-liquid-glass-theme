@@ -45,6 +45,31 @@
 # recipe: waybar's `tooltip` keeps an opaque base (it lands over app windows,
 # not the wallpaper), and mako.ini keeps a 0.30 rim (no gradient, no inset —
 # the rim is its entire material). Both are commented at the site.
+#
+# ── Corner radius scale ───────────────────────────────────────────────────
+# Reference only, same as above: each site names its step in a comment.
+# Roughly, the bigger the surface the rounder it gets, so a panel and the
+# controls sitting on it never share a radius.
+#
+#   radius-xl  26px   launcher panel
+#   radius-lg  22px   OSD
+#   radius-md  18px   notification
+#              14px   bar pill, tooltip, launcher row
+#   radius-sm   9px   workspace pill
+#               8px   progress bar
+#
+# radius-md carries two values on purpose: 18px is a standalone surface, 14px
+# is a surface with other surfaces on top of it. Both are "medium" in the same
+# sense and neither wants the other's number.
+#
+# Every one of these is a *circular* arc. Windows are rounded by the
+# compositor instead (hyprland.conf: rounding = 20, rounding_power = 4.5),
+# which is a superellipse — continuous curvature rather than an arc pasted
+# onto a straight edge, and visibly softer at the same nominal radius.
+# GTK-CSS has no superellipse primitive and no way to fake one on a border,
+# so the shell surfaces approximate it and stop there. That gap is a platform
+# ceiling, not a defect — in particular, don't "fix" it by lowering
+# rounding_power to make windows match the panels.
 
 accent               = "#6BCCA9"
 cursor               = "#A8E4D3"

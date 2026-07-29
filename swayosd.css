@@ -1,5 +1,11 @@
 /* Liquid Glass — SwayOSD
  *
+ * Radii below follow the 4-step scale documented in colors.toml, and each one
+ * names its step. They are circular arcs approximating the superellipse the
+ * compositor gives windows (hyprland.conf: rounding_power = 4.5). GTK-CSS has
+ * no superellipse primitive, so that is as close as a panel can get — a
+ * platform ceiling, not a bug to fix.
+ *
  * ~/.config/swayosd/style.css imports this file, then styles `window` with an
  * opaque @background-color and `border-radius: 0`. Colour is easy — the alpha
  * rides along in the define below. The radius and the gradient need to outrank
@@ -16,6 +22,7 @@
 @define-color progress #6bcca9;
 
 window:not(.liquid-glass-never) {
+  /* radius-lg (22px) — OSD */
   border-radius: 22px;
   background-image: linear-gradient(
     to bottom,
@@ -34,6 +41,7 @@ window:not(.liquid-glass-never) {
 }
 
 progressbar:not(.liquid-glass-never) {
+  /* radius-sm (8px) — progress bar */
   border-radius: 8px;
 }
 
@@ -42,10 +50,12 @@ progressbar trough {
   /* A recess, not the bevel pair: this one is blurred over 2px so the track
      reads as cut *into* the pane. Deliberately outside the six-token set. */
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+  /* radius-sm (8px) — progress bar */
   border-radius: 8px;
 }
 
 progressbar progress {
+  /* radius-sm (8px) — progress bar */
   border-radius: 8px;
   /* glass-specular */
   box-shadow: inset 0 1px 0 rgba(240, 252, 248, 0.34);

@@ -1,5 +1,11 @@
 /* Liquid Glass — Walker
  *
+ * Radii below follow the 4-step scale documented in colors.toml, and each one
+ * names its step. They are circular arcs approximating the superellipse the
+ * compositor gives windows (hyprland.conf: rounding_power = 4.5). GTK-CSS has
+ * no superellipse primitive, so that is as close as a panel can get — a
+ * platform ceiling, not a bug to fix.
+ *
  * Omarchy's walker stylesheet imports this file, then applies
  * `.box-wrapper { background: alpha(@base, 0.95); }`. Two consequences:
  *
@@ -35,6 +41,7 @@
     rgba(7, 16, 13, 0.35) 100%
   );
 
+  /* radius-xl (26px) — launcher panel */
   border-radius: 26px;
   border: 1px solid @border;
 
@@ -63,6 +70,7 @@
 
 /* Selection is a nearer pane sliding under the cursor, lit along its top. */
 child:selected {
+  /* radius-md (14px) — launcher row */
   border-radius: 14px;
 }
 
@@ -77,9 +85,11 @@ child:selected .item-box {
   );
   /* glass-specular */
   box-shadow: inset 0 1px 0 rgba(240, 252, 248, 0.34);
+  /* radius-md (14px) — launcher row */
   border-radius: 14px;
 }
 
 .item-box {
+  /* radius-md (14px) — launcher row */
   border-radius: 14px;
 }
