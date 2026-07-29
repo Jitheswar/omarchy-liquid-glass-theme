@@ -33,19 +33,25 @@
  * panel to near-white and took the text with it. Measured over a blank white
  * window, item labels against their own background:
  *
- *     base alpha    0.30    0.45    0.60    0.75
- *     item labels   2.4:1   3.2:1   4.4:1   6.2:1
- *                                   ^ WCAG AA (4.5:1) is about here
+ *     tint          18,38,32   18,38,32   7,16,13   7,16,13
+ *     alpha            0.30       0.60       0.55      0.42
+ *     item labels     2.4:1      4.4:1      4.4:1     3.3:1
+ *                                ^ WCAG AA (4.5:1) is about here
  *
- * 0.60 is the lowest step tested that brings body text to roughly AA, and
- * over the wallpaper it still reads as glass — the blurred shapes behind are
- * plainly visible through it, which is the property that actually matters.
- * 0.75 reads as frost and buys contrast the launcher does not need.
+ * The first attempt raised the alpha on the mid-tone tint and got the
+ * contrast, but the panel went milky grey — the most opaque surface in a
+ * theme whose whole argument is that you should be able to see through it.
+ * Darkening the tint instead buys the same contrast for free: 7,16,13 at
+ * 0.55 measures within noise of 18,38,32 at 0.60 over a white window, and
+ * over the wallpaper it reads as deep glass rather than a slab, because a
+ * dark tint lets the bright parts behind it come through as light instead of
+ * flattening everything toward grey. Going further to 0.42 looks better
+ * still and drops body text under AA, which is where this stops.
  *
  * This is a fixed value rather than a smart one on purpose: GTK-CSS cannot
  * sample its backdrop, so there is no version of this that adapts. It is a
  * fixed cost paid against the worst case. */
-@define-color base rgba(18, 38, 32, 0.60);
+@define-color base rgba(7, 16, 13, 0.55);
 
 /* glass-edge */
 @define-color border rgba(233, 243, 239, 0.21);
@@ -82,9 +88,22 @@
  * The two rules below are scored *into* the sheet rather than around it, so
  * they are deliberately not glass-edge — at 0.21 an internal divider reads as
  * a seam between two stacked panels, which is the opposite of the intent. */
+/* The search field is a well cut into the sheet, not a line drawn under it.
+ * Same recess the bar's module clusters use and the OSD's progress trough
+ * before them: shaded at the top where light cannot reach in, catching a thin
+ * highlight on the bottom lip. A hairline divider said "there is a search box
+ * somewhere above this"; a well says "type here". */
 .search-container.search-container {
-  background-color: transparent;
-  border-bottom: 1px solid rgba(233, 243, 239, 0.10);
+  background-color: rgba(7, 16, 13, 0.32);
+  border-bottom: none;
+  /* radius-sm (9px) — a control inside the panel, so it sits under
+     radius-md (14px) rows, which sit under the panel's radius-xl. */
+  border-radius: 9px;
+  margin: 0 0 10px 0;
+  padding: 10px 12px;
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.38),
+    inset 0 -1px 0 rgba(240, 252, 248, 0.12);
 }
 
 .keybind-hints.keybind-hints {
@@ -136,6 +155,14 @@ child:selected .item-box * {
  * Doubling `.item-box` makes this (0,3,1) and it wins on specificity instead. */
 child:selected .item-box.item-box * {
   color: @foreground;
+}
+
+/* Hover is a wash, not a pane. The list had no hover state at all, so the
+   only thing that ever moved was the selection — pointing at a row and having
+   nothing happen is what makes a list feel like a picture of a list. Kept well
+   under the selected row's lit gradient so the two never compete. */
+child:hover .item-box.item-box {
+  background-color: rgba(190, 235, 220, 0.07);
 }
 
 /* Selection is a nearer pane sliding under the cursor, lit along its top. */
