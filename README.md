@@ -24,22 +24,32 @@ deletion. Those are readings, not decoration.
 
 ## Requirements
 
-**Hyprland 0.53.0 or newer.** Two things set that floor, and both fail
+**Hyprland 0.56.0 or newer.** Four things set that floor, and all of them fail
 loudly rather than degrading, so it is worth checking before installing:
 
 | Feature | Needs | Why |
 |---|---|---|
 | `decoration:rounding_power = 4.5` | 0.47.0 | squircle corners — added as "supercircular window corners" ([#8943](https://github.com/hyprwm/Hyprland/pull/8943)) |
 | `windowrule`/`layerrule … match:…` | 0.53.0 | the rule syntax was rewritten and the old comma form removed ([#12269](https://github.com/hyprwm/Hyprland/pull/12269)) |
+| `decoration:glow` with a gradient | 0.56.0 | the inner rim — glow gained gradients and angles ([#15208](https://github.com/hyprwm/Hyprland/pull/15208)) |
+| `decoration:shadow` with a gradient | 0.56.0 | same, for shadows ([#14809](https://github.com/hyprwm/Hyprland/pull/14809)) |
+| `decoration:motion_blur` | 0.56.0 | added as "a motion blur option to windows" ([#14911](https://github.com/hyprwm/Hyprland/pull/14911)) |
 
-0.53.0 is the binding one. On anything older every `windowrule` and
-`layerrule` in `hyprland.conf` is a config error, which means no blur on the
-bar, launcher, notifications or OSD, and no window transparency — the theme
-would load as a palette and nothing else. Check with `hyprctl version`.
+0.56.0 is the binding one. Below it the glow and motion-blur blocks are
+unknown options, and below 0.53.0 every `windowrule` and `layerrule` is a
+config error too — which means no blur on the bar, launcher, notifications or
+OSD, and no window transparency. The theme would load as a palette and nothing
+else. Check with `hyprctl version`.
 
-Omarchy 3.x ships well past this, so if the theme installs through
+Omarchy 3.x ships 0.56.0, so if the theme installs through
 `omarchy theme install` you are already fine. Developed and verified against
 Hyprland 0.56.0 / Omarchy 3.8.4.
+
+Nothing else is required. No plugin, no patched compositor, no `hyprpm`, no
+package outside what Omarchy already installs — clone it, set it, and every
+effect described below is running. That is a constraint the theme is built
+under rather than a happy accident, and the section on what it costs is
+[further down](#what-a-plugin-would-add-and-why-there-isnt-one).
 
 ### Verified
 
@@ -283,6 +293,46 @@ catching a single overhead light. At 1px it collapses into a plain outline. In t
 surfaces the same idea is an `inset 0 1px 0` highlight plus a vertical
 gradient body; remove that one inset shadow and the bar goes flat instantly.
 
+**On windows the rim is real, not painted.** `decoration:glow` is badly named
+— it is not an outer bloom but an *inner* one, and it is the only part of this
+theme that is computed from a surface's geometry rather than drawn on top of
+it. The compositor measures each pixel's distance from the window edge and
+fades white inward over 14px, following the same superellipse the corner is
+cut on. Where the GTK panels get a one-pixel highlight because that is all
+GTK-CSS has, a window gets a genuine ramp. Measured over the shipped
+wallpaper, mean luminance of a 400px row at increasing depth below the top
+edge:
+
+| depth | 0px | 2px | 4px | 6px | 8px | 10px | 14px |
+|---|---|---|---|---|---|---|---|
+| off | 28.7 | 29.7 | 30.7 | 31.7 | 32.8 | 33.6 | 35.3 |
+| inactive | 50.0 | 44.7 | 41.2 | 37.8 | 36.3 | 35.5 | 35.3 |
+| active | 88.3 | 73.3 | 61.0 | 50.7 | 43.8 | 38.9 | 37.1 |
+
+Back on the baseline by about 12px in both states, which is the whole point: a
+ramp, not a second border. The falloff is `pow(1 - dist/range, render_power)`,
+so `render_power` is the shape knob — at 4 it collapses to a 4px spike that
+reads as a doubled outline, and a 20px range at power 3 spreads far enough to
+look like haze, which is frost again. 14 and 2 is the pair that ramps.
+
+**The shadow agrees with the rim about where the light is.** It is a gradient
+now rather than a flat black — 0.22 at the top falling to 0.52 at the base, on
+the same 90° as the border and the inner rim. A cast shadow is not evenly
+dark; the light is occluded most directly under the bottom edge. Total weight
+is unchanged (the old flat value averaged 0.40, this averages 0.37) — the
+shadow did not get heavier, it moved to where `offset = 0 3` was already
+pushing it.
+
+**Windows smear when they move.** `decoration:motion_blur`, at 12 samples.
+This is the one setting in the theme that is asserted rather than measured,
+and the reason is worth stating plainly: motion blur is a function of
+per-frame displacement, so every way of photographing it — a screenshot caught
+mid-animation, or slowing the animation down until a screenshot can catch it —
+destroys the thing being photographed. What is verified is that it loads, that
+it engages only during a move or resize, and that it costs nothing at rest.
+What it looks like in flight is your call; one line turns it off, in
+[Tuning](#tuning).
+
 **Transparency works two different ways, because apps fall into two camps.**
 
 Terminals can render a translucent *background* while keeping glyphs fully
@@ -362,6 +412,45 @@ around a floating panel doesn't get blurred along with the panel.
 `xray` is off on purpose: seeing other windows refracted behind the front one
 is the layered depth the theme is built around. Turn it on in `hyprland.conf`
 to trade that for lower GPU load.
+
+## What a plugin would add, and why there isn't one
+
+Everything above is the compositor's own configuration. That is a deliberate
+limit, and it is honest to say what it costs, because the material this theme
+is named after does four things nothing here can do.
+
+All four are the same thing underneath: **real glass displaces what is behind
+it, and blur only averages it.** Refraction is a UV offset driven by a height
+field — steep at the rim, flat in the middle — so content near the edge is
+pulled in from beyond the surface's own bounds. Chromatic dispersion falls out
+of sampling red, green and blue at slightly different refraction scales, which
+is what puts a spectral fringe on an edge. Fresnel makes the rim more
+reflective at a glancing angle. And an adaptive material samples its own
+backdrop and changes tint so that foreground text stays legible over anything.
+
+Hyprland's blur is a Kawase blur. It can average neighbouring pixels and it
+cannot move them, so none of the four is reachable from a config file at any
+setting. What this theme does instead is paint a very careful still life of
+the result: a lit rim, a bevel, a graded body, a shadow that agrees about the
+light. The parts that are computed rather than painted — the compositor's
+inner rim, the superellipse corners — are the parts that hold up best when you
+look closely, which is the tell.
+
+Plugins exist that do the real thing. [hyprglass](https://github.com/hyprnux/hyprglass)
+and [liquid-glass-plugin-hyprpm](https://github.com/purple-lines/liquid-glass-plugin-hyprpm)
+both implement edge refraction, chromatic aberration, fresnel and specular
+highlights, and hyprglass reaches layer surfaces too, which matters because
+most of this theme *is* layer surfaces. Its `adaptive_dim` and `adaptive_boost`
+are the backdrop-sampling that `walker.css` correctly calls impossible in
+GTK-CSS — impossible there, entirely possible in the compositor.
+
+They are not used here, and the reason is the first line of this section. A
+plugin is compiled against one exact Hyprland ABI and breaks on the next
+release; hyprglass hooks private internals to reach layer surfaces at all.
+A theme that needed one would be a theme that stops working on a Tuesday
+because Hyprland shipped a point release, and "clone it and it works" is worth
+more than a fringe on an edge. If you want the fringe, install one of them
+yourself — nothing in this theme conflicts with either.
 
 ## What's in here
 
@@ -454,6 +543,46 @@ layerrule = no_anim off, match:namespace walker
 Later rules win, so this belongs in `looknfeel.conf` like everything else in
 this section. Blur and the `ignore_alpha` threshold already apply to walker
 either way — `no_anim` only governs animation.
+
+### The inner rim, and turning the motion off
+
+Two settings people are most likely to want to move. Both are compositor
+options, so `looknfeel.conf` reaches them:
+
+```ini
+# The rim: brighter, or wider, or gone.
+decoration:glow:enabled      = false   # off entirely
+decoration:glow:range        = 20      # from 14 — wider ramp, closer to haze
+decoration:glow:render_power = 4       # from 2  — tighter, reads as a second outline
+
+# The smear on moving and resizing windows.
+decoration:motion_blur:enabled = false
+decoration:motion_blur:samples = 7     # from 12 — Hyprland's default, cheaper
+```
+
+There is no per-window escape hatch for the rim. `no_blur`, `no_shadow` and
+`no_dim` all exist as window rules; `no_glow` does not. So a *windowed* video
+player gets a faint white edge inside its frame and no rule can exempt it —
+fullscreen is exempt anyway, because the compositor drops decorations there,
+which covers the case where it would actually bother you.
+
+### Blur on the lock screen
+
+0.56 added `misc:session_lock_blur`, and the theme leaves it off deliberately.
+Its own help text says you probably want `misc:session_lock_xray` with it, and
+that option keeps your workspaces rendering underneath the lock surface.
+Against Omarchy's hyprlock, which draws an opaque wallpaper, that renders a
+desktop nobody can see and bills the GPU for it. Against a hyprlock someone
+has made translucent, it puts the contents of their session on the lock
+screen — blurred, but there.
+
+A lock screen exists to not show you the desktop, so that is not a switch a
+theme should throw on a user's behalf. If you want it, you want it knowingly:
+
+```ini
+misc:session_lock_blur = true
+misc:session_lock_xray = true
+```
 
 ### Frost instead of clear
 

@@ -58,6 +58,20 @@
 # not the wallpaper), and mako.ini keeps a 0.30 rim (no gradient, no inset —
 # the rim is its entire material). Both are commented at the site.
 #
+# There is a seventh element, and it is deliberately not in the list above
+# because only one kind of surface can have it. Windows get an *inner rim*
+# from the compositor — see decoration:glow in hyprland.conf — which fades
+# white inward from the edge over 14px, following the same superellipse the
+# corner is cut on. That is the thing glass-specular is imitating. A hairline
+# is what GTK-CSS can draw; a 14px ramp computed from the window's own
+# geometry is what the material actually wants, and the shell surfaces cannot
+# have it at any alpha because GTK has no equivalent primitive.
+#
+# So the six tokens above are not the material. They are the best available
+# approximation of it on surfaces that cannot ask the compositor for the real
+# thing, and the gap between a window's rim and a panel's is the size of that
+# compromise. Worth knowing before trying to "fix" the panels to match.
+#
 # ── Corner radius scale ───────────────────────────────────────────────────
 # Reference only, same as above: each site names its step in a comment.
 # Roughly, the bigger the surface the rounder it gets, so a panel and the
