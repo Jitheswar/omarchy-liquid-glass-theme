@@ -167,6 +167,35 @@ Media apps are excluded: Omarchy's own rules strip the opacity tags from mpv,
 vlc, OBS, Zoom and YouTube tabs, and this theme matches on those tags rather
 than on window class, so video stays fully opaque for free.
 
+**The launcher over light windows is the one place this trade-off bites, and
+it is only mitigated, not solved.** Every other surface here sits over the
+wallpaper, which is nearly black and known in advance. The launcher opens over
+whatever you were looking at, and over a white document the page behind used
+to lift the panel to near-white and take the near-white text with it. Two
+things push back: a dark halo behind the glyphs, which costs nothing against
+the wallpaper because it *is* the wallpaper's colour, and a launcher fill at
+`0.60` rather than `0.30` — a deliberate exception to clear-not-frosted,
+documented at the site in `walker.css`. Measured over a blank white window:
+
+| | before | after |
+|---|---|---|
+| item labels | 2.3–3.1:1 | 4.4–5.5:1 |
+| search placeholder | 1.3:1 | 1.8:1 |
+| selected row label | 1.0:1 | 1.7:1 |
+
+Body text clears roughly WCAG AA now. The last two rows do not, and cannot be
+fixed by this route: the placeholder is deliberately at half opacity, and the
+selected row is jade text on a jade-lit pill, which is low contrast on *any*
+backdrop — it measures 2.9:1 even over the wallpaper. Raising the fill does
+nothing for either.
+
+**Known limitation:** GTK-CSS cannot sample what is behind a surface, so no
+part of this can adapt to the backdrop — there is no `backdrop-luminance` to
+respond to and no way to fake one. What is here is a fixed cost paid against
+the worst case. A launcher that genuinely adapted would need walker itself to
+sample the screen behind it and swap a style class, which is an upstream
+feature, not a theme one.
+
 **Corners are squircles.** `rounding = 20` (Hyprland's ceiling) at
 `rounding_power = 4.5` gives continuous curvature rather than a circular arc
 pasted onto a straight edge — most of what makes a corner look moulded.
