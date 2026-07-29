@@ -11,6 +11,40 @@
 #
 # Everything Omarchy generates (btop, helix, obsidian, gum, chromium,
 # hyprlock…) is derived from these values.
+#
+# ── Glass material tokens ─────────────────────────────────────────────────
+# Reference only. GTK-CSS cannot import from a TOML file, so waybar.css,
+# walker.css and swayosd.css each spell these out inline and name the token in
+# a comment above the declaration. This block is the one place they are
+# defined; if you change a value here, grep the token name and update every
+# site. The values below are what those three files now agree on — they used
+# to drift by a few points of alpha per file, which is invisible on any one
+# surface and obvious when two sit next to each other.
+#
+#   glass-fill-top   rgba(190, 235, 220, 0.16)
+#       Top stop of the pane gradient. The lit edge where the glass curves up
+#       to meet the light — the brightest point of the body.
+#
+#   glass-fill-mid   rgba(30, 62, 52, 0.28)
+#       Middle stop, at 45%. The body of the lens, where it is thickest.
+#
+#   glass-fill-base  rgba(7, 16, 13, 0.35)
+#       Bottom stop. Where the pane falls into its own shadow.
+#
+#   glass-edge       rgba(233, 243, 239, 0.21)
+#       The 1px rim around a surface. Reads as the cut edge of the sheet.
+#
+#   glass-specular   rgba(240, 252, 248, 0.34)
+#       inset 0 1px 0 — the highlight running along the top edge. Remove this
+#       one line and every surface in the theme goes flat instantly.
+#
+#   glass-shade      rgba(0, 0, 0, 0.29)
+#       inset 0 -1px 0 — the shaded underside, paired with glass-specular.
+#
+# Two documented exceptions, both because the surface cannot carry the full
+# recipe: waybar's `tooltip` keeps an opaque base (it lands over app windows,
+# not the wallpaper), and mako.ini keeps a 0.30 rim (no gradient, no inset —
+# the rim is its entire material). Both are commented at the site.
 
 accent               = "#6BCCA9"
 cursor               = "#A8E4D3"

@@ -25,7 +25,8 @@
 @define-color background rgba(0, 0, 0, 0);
 
 @define-color glass_raised rgba(107, 204, 169, 0.18);
-@define-color glass_edge rgba(233, 243, 239, 0.20);
+/* glass-edge */
+@define-color glass_edge rgba(233, 243, 239, 0.21);
 @define-color accent #6bcca9;
 @define-color muted #4b7265;
 
@@ -39,9 +40,12 @@ window#waybar > box {
      *content* rather than a texture. */
   background-image: linear-gradient(
     to bottom,
-    rgba(190, 235, 220, 0.17) 0%,
-    rgba(30, 62, 52, 0.30) 45%,
-    rgba(7, 16, 13, 0.36) 100%
+    /* glass-fill-top */
+    rgba(190, 235, 220, 0.16) 0%,
+    /* glass-fill-mid */
+    rgba(30, 62, 52, 0.28) 45%,
+    /* glass-fill-base */
+    rgba(7, 16, 13, 0.35) 100%
   );
 
   /* Sized for `"height": 38` in config.jsonc (Omarchy ships 26, which leaves
@@ -55,8 +59,10 @@ window#waybar > box {
   /* The specular edge, the shaded base, then the float. This trio is the
      whole illusion: without the first inset the bar goes flat instantly. */
   box-shadow:
-    inset 0 1px 0 rgba(240, 252, 248, 0.38),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.30),
+    /* glass-specular */
+    inset 0 1px 0 rgba(240, 252, 248, 0.34),
+    /* glass-shade */
+    inset 0 -1px 0 rgba(0, 0, 0, 0.29),
     0 3px 10px rgba(0, 0, 0, 0.40);
 }
 
@@ -87,17 +93,24 @@ window#waybar > box {
   border-radius: 9px;
   background-image: linear-gradient(
     to bottom,
-    rgba(190, 235, 220, 0.17) 0%,
+    /* glass-fill-top */
+    rgba(190, 235, 220, 0.16) 0%,
+    /* Accent tint, not glass-fill-base: the pill is a *lit* surface, so its
+       body carries the accent rather than falling into shadow. */
     rgba(107, 204, 169, 0.09) 100%
   );
   box-shadow:
+    /* glass-specular */
     inset 0 1px 0 rgba(240, 252, 248, 0.34),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.20);
+    /* glass-shade */
+    inset 0 -1px 0 rgba(0, 0, 0, 0.29);
   color: @accent;
 }
 
 #workspaces button:hover {
   border-radius: 8px;
+  /* Not glass-fill-top: a hover wash is a flat tint, not the top stop of a
+     ramp. Kept well under the token so hover stays quieter than active. */
   background-color: rgba(190, 235, 220, 0.10);
 }
 
@@ -109,7 +122,12 @@ window#waybar > box {
 tooltip {
   background-image: linear-gradient(
     to bottom,
-    rgba(190, 235, 220, 0.14) 0%,
+    /* glass-fill-top */
+    rgba(190, 235, 220, 0.16) 0%,
+    /* Deliberately *not* glass-fill-base. A tooltip is the one surface that
+       appears over arbitrary content — an app's own window, not the wallpaper
+       — so it needs a backing opaque enough to keep short text legible
+       wherever it lands. glass-fill-base (0.35) is far too clear for that. */
     rgba(10, 22, 19, 0.66) 100%
   );
   background-color: rgba(10, 22, 19, 0.55);
@@ -117,7 +135,8 @@ tooltip {
   border-radius: 12px;
   padding: 4px;
   box-shadow:
-    inset 0 1px 0 rgba(240, 252, 248, 0.30),
+    /* glass-specular */
+    inset 0 1px 0 rgba(240, 252, 248, 0.34),
     0 6px 18px rgba(0, 0, 0, 0.45);
 }
 

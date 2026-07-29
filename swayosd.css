@@ -9,7 +9,8 @@
  * Frosting comes from `layerrule = blur on, match:namespace swayosd`. */
 
 @define-color background-color rgba(18, 38, 32, 0.30);
-@define-color border-color rgba(233, 243, 239, 0.22);
+/* glass-edge */
+@define-color border-color rgba(233, 243, 239, 0.21);
 @define-color label #e9f3ef;
 @define-color image #e9f3ef;
 @define-color progress #6bcca9;
@@ -18,13 +19,18 @@ window:not(.liquid-glass-never) {
   border-radius: 22px;
   background-image: linear-gradient(
     to bottom,
+    /* glass-fill-top */
     rgba(190, 235, 220, 0.16) 0%,
-    rgba(30, 62, 52, 0.26) 45%,
-    rgba(7, 16, 13, 0.34) 100%
+    /* glass-fill-mid */
+    rgba(30, 62, 52, 0.28) 45%,
+    /* glass-fill-base */
+    rgba(7, 16, 13, 0.35) 100%
   );
   box-shadow:
+    /* glass-specular */
     inset 0 1px 0 rgba(240, 252, 248, 0.34),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.28);
+    /* glass-shade */
+    inset 0 -1px 0 rgba(0, 0, 0, 0.29);
 }
 
 progressbar:not(.liquid-glass-never) {
@@ -33,11 +39,14 @@ progressbar:not(.liquid-glass-never) {
 
 progressbar trough {
   background-color: rgba(10, 22, 19, 0.45);
+  /* A recess, not the bevel pair: this one is blurred over 2px so the track
+     reads as cut *into* the pane. Deliberately outside the six-token set. */
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
   border-radius: 8px;
 }
 
 progressbar progress {
   border-radius: 8px;
-  box-shadow: inset 0 1px 0 rgba(240, 252, 248, 0.35);
+  /* glass-specular */
+  box-shadow: inset 0 1px 0 rgba(240, 252, 248, 0.34);
 }
