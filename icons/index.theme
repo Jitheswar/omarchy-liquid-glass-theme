@@ -1,0 +1,12 @@
+[Icon Theme]
+Name=Liquid Glass
+Comment=Hueless glass folders. Everything else is inherited.
+Inherits=Yaru-prussiangreen-dark,Yaru,hicolor
+Directories=scalable/places
+
+[scalable/places]
+Size=48
+MinSize=8
+MaxSize=512
+Context=Places
+Type=Scalable

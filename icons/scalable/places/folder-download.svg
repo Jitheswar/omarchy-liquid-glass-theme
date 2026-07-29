@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <!-- Body. Brightest where the sheet curves up to meet the light, thinning
+         through the middle where it is most transparent, picking up again at
+         the base where it thickens. -->
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"    stop-color="#ffffff" stop-opacity="0.26"/>
+      <stop offset="0.42" stop-color="#ffffff" stop-opacity="0.09"/>
+      <stop offset="0.82" stop-color="#ffffff" stop-opacity="0.07"/>
+      <stop offset="1"    stop-color="#ffffff" stop-opacity="0.15"/>
+    </linearGradient>
+    <!-- The tab sits behind the face, so it reads slightly denser. -->
+    <linearGradient id="tabg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.13"/>
+    </linearGradient>
+    <!-- Rim: bright along the top where light lands, falling away down the
+         sides. This is what makes it read as a cut edge rather than a shape. -->
+    <linearGradient id="rimg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"    stop-color="#ffffff" stop-opacity="0.75"/>
+      <stop offset="0.45" stop-color="#ffffff" stop-opacity="0.30"/>
+      <stop offset="1"    stop-color="#ffffff" stop-opacity="0.42"/>
+    </linearGradient>
+    <!-- Specular sweep across the upper left, the single brightest thing. -->
+    <linearGradient id="spec" x1="0" y1="0" x2="0.5" y2="1">
+      <stop offset="0"   stop-color="#ffffff" stop-opacity="0.55"/>
+      <stop offset="0.6" stop-color="#ffffff" stop-opacity="0.06"/>
+      <stop offset="1"   stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <!-- Drop shadow, so the icon still has an edge on a white background. -->
+    <filter id="drop" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="1.6" stdDeviation="1.8"
+                    flood-color="#000000" flood-opacity="0.55"/>
+    </filter>
+    <clipPath id="face">
+      <path d="M4 23 h56 a4 4 0 0 1 4 4 v21 a5 5 0 0 1 -5 5 H5 a5 5 0 0 1 -5 -5 V27 a4 4 0 0 1 4 -4 z"/>
+    </clipPath>
+  </defs>
+
+  <g filter="url(#drop)">
+    <!-- back tab -->
+    <path d="M7 15 h15 l5 6 h30 a4 4 0 0 1 4 4 v5 H7 z" fill="url(#tabg)"/>
+    <path d="M7 15 h15 l5 6 h30 a4 4 0 0 1 4 4 v5"
+          fill="none" stroke="#ffffff" stroke-opacity="0.34" stroke-width="1"/>
+
+    <!-- face -->
+    <path d="M4 23 h56 a4 4 0 0 1 4 4 v21 a5 5 0 0 1 -5 5 H5 a5 5 0 0 1 -5 -5 V27 a4 4 0 0 1 4 -4 z"
+          fill="url(#body)"/>
+
+    <g clip-path="url(#face)">
+      <!-- specular sweep -->
+      <path d="M0 23 h34 L14 53 H0 z" fill="url(#spec)"/>
+      <!-- shaded underside: what keeps it visible on a light backdrop -->
+      <path d="M0 43 h64 v11 H0 z" fill="#000000" fill-opacity="0.20"/>
+      <path d="M0 51.4 h64" stroke="#000000" stroke-opacity="0.30" stroke-width="1.4"/>
+      <g fill="none" stroke="#ffffff" stroke-opacity="0.6" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M32 31 v9"/><path d="M27.5 36 l4.5 4.5 l4.5 -4.5"/><path d="M26 44 h12"/></g>
+    </g>
+
+    <!-- rim -->
+    <path d="M4 23 h56 a4 4 0 0 1 4 4 v21 a5 5 0 0 1 -5 5 H5 a5 5 0 0 1 -5 -5 V27 a4 4 0 0 1 4 -4 z"
+          fill="none" stroke="url(#rimg)" stroke-width="1.15"/>
+    <!-- hard specular line riding the very top edge -->
+    <path d="M6 24.1 h52" fill="none" stroke="#ffffff" stroke-opacity="0.85"
+          stroke-width="1.1" stroke-linecap="round"/>
+  </g>
+</svg>
