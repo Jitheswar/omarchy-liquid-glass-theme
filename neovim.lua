@@ -17,9 +17,14 @@ return {
       colors = {
         bg         = "#0A0A0A",
         dark_bg    = "#0A0A0A",
-        darker_bg  = "#040807",
+        darker_bg  = "#050505",
         lighter_bg = "#1A1A1A",
-        selection  = "#1D4937",
+        -- Neutral, like selection_background in colors.toml, and dark rather
+        -- than the light grey that file uses: this one is a *background* under
+        -- unchanged foreground text, not a highlight with its own text colour.
+        -- It also lands on LspReference* below, which paints every occurrence
+        -- of the symbol under the cursor, so it has to stay quiet.
+        selection  = "#2E2E2E",
 
         fg         = "#E0E0E0",
         dark_fg    = "#C6C6C6",
@@ -33,7 +38,11 @@ return {
         cyan       = "#74C7CE",
         blue       = "#6FB6D6",
         purple     = "#B49BE0",
-        brown      = "#CBD8D2",
+        -- Was #CBD8D2, which is a pale mint rather than a brown — the last of
+        -- the jade cast. Neutralised at the same lightness instead of being
+        -- given a hue it never had: aether uses this slot for very little, and
+        -- inventing a tan here would spread the palette for no reading.
+        brown      = "#D2D2D2",
 
         bright_red    = "#FF97A8",
         bright_yellow = "#F5E2A8",
