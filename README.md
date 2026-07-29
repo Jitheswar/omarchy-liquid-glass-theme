@@ -67,6 +67,27 @@ At 26 the floating pill has only ~18px of interior once margins and borders
 are taken out. It works, but it reads as a thin strip rather than a panel.
 Run `omarchy restart waybar` afterwards.
 
+Then round the lock field, which a theme cannot reach either. Change this one
+line inside the `input-field { }` block of `~/.config/hypr/hyprlock.conf`:
+
+```ini
+rounding = 22   # Omarchy ships 0
+```
+
+That is `radius-lg`, the same step the OSD uses — the field is 650x100, the
+same order of size. It takes effect the next time you lock; nothing to
+restart.
+
+**Known limitation:** the shipped theme alone cannot round the lock field.
+Omarchy's `hyprlock.conf` `source`s the theme's file and then writes its own
+`input-field { }` block, and hyprlock registers `input-field` as an
+anonymous-key-based category — so a second block from a theme adds a *second*
+password field rather than overriding the first. A theme is limited to
+substituting the five colour variables into that shared base config. The other
+two shape properties in the same position, `shadow_passes` and
+`outline_thickness`, are documented with suggested values at the top of
+`hyprlock.conf`.
+
 Or clone it into place and switch manually:
 
 ```bash
