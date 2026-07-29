@@ -1,0 +1,30 @@
+/* Liquid Glass — GTK4 applications
+ *
+ * Copy to ~/.config/gtk-4.0/gtk.css. Omarchy applies no theme gtk.css, so
+ * unlike everything else in this repo this one file has to be installed by
+ * hand; see the README.
+ *
+ * Without it the folder icons cannot work. They carry no colour and take the
+ * colour of whatever is behind them, but inside a file manager that is the
+ * file manager's own opaque background — measured at rgb(30,28,35), GTK's
+ * dark window colour — so they render grey no matter what the wallpaper is.
+ * Making the window background translucent is what lets the desktop reach
+ * them.
+ *
+ * Translucent rather than fully transparent, and that distinction is the
+ * whole design. At `transparent` the window behind shows through at full
+ * strength: gnome-calculator's display became unreadable with another
+ * window's text running straight through the digits. A translucent *black*
+ * backing darkens whatever is behind it instead, so text keeps something to
+ * sit on while the wallpaper still comes through.
+ *
+ * 0.25 was chosen by sweeping it. Lower shows more wallpaper and starts
+ * risking readability over bright windows; higher and the wallpaper stops
+ * arriving at all — at 0.55 there is barely any point doing this. If an app
+ * does misbehave, raising this is the first thing to try. */
+window.background,
+.view, listview, gridview, columnview,
+scrolledwindow, viewport {
+  background-color: rgba(0, 0, 0, 0.25);
+  background-image: none;
+}
