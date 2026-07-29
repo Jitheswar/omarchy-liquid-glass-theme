@@ -16,6 +16,17 @@ direction.
 omarchy theme install https://github.com/Jitheswar/omarchy-liquid-glass-theme.git
 ```
 
+Then set the bar height, which a theme has no way to reach — it lives in
+`~/.config/waybar/config.jsonc`, not in any theme file:
+
+```jsonc
+"height": 38,   // Omarchy ships 26
+```
+
+At 26 the floating pill has only ~18px of interior once margins and borders
+are taken out. It works, but it reads as a thin strip rather than a panel.
+Run `omarchy restart waybar` afterwards.
+
 Or clone it into place and switch manually:
 
 ```bash
@@ -68,10 +79,23 @@ a single overhead light. At 1px it collapses into a plain outline. In the GTK
 surfaces the same idea is an `inset 0 1px 0` highlight plus a vertical
 gradient body; remove that one inset shadow and the bar goes flat instantly.
 
-**Transparency comes from the app, not the compositor.** Each terminal sets its
-own background alpha (`0.74`) while leaving glyphs fully opaque. Lowering
-window opacity in Hyprland instead would fade the text along with the
-background, which is why `active_opacity` stays at `1.0`.
+**Transparency works two different ways, because apps fall into two camps.**
+
+Terminals can render a translucent *background* while keeping glyphs fully
+opaque — that's the good kind of glass, and it's why `active_opacity` stays at
+`1.0` and each terminal config sets its own alpha (`0.74`) instead.
+
+Everything else — GTK, Electron, browsers — draws an opaque background and
+exposes no equivalent knob. Nothing in a theme can change that; Omarchy doesn't
+apply a theme `gtk.css`, and Chromium has no transparency setting. The only
+lever left is Hyprland window opacity, which fades text along with the
+background. So those windows get a mild `opacity 0.92 0.86` — enough that the
+blur behind registers as glass, not so much that a page becomes hard to read.
+Blur still applies underneath because `blur:ignore_opacity` is on.
+
+Media apps are excluded: Omarchy's own rules strip the opacity tags from mpv,
+vlc, OBS, Zoom and YouTube tabs, and this theme matches on those tags rather
+than on window class, so video stays fully opaque for free.
 
 **Corners are squircles.** `rounding = 20` (Hyprland's ceiling) at
 `rounding_power = 4.5` gives continuous curvature rather than a circular arc
@@ -119,9 +143,13 @@ decoration:blur:size  = 8       # from 4
 decoration:blur:noise = 0.02    # from 0.003 — grain is what reads as "frosted"
 ```
 
-Clearer or more solid panes: `opacity` in `alacritty.toml`,
+Clearer or more solid *terminals*: `opacity` in `alacritty.toml`,
 `background-opacity` in `ghostty.conf`, `background_opacity` in `kitty.conf`,
 `alpha` in `foot.ini`. Below about `0.65` text starts to fight the wallpaper.
+
+Clearer or more solid *everything else* — the three `windowrule = opacity`
+lines at the bottom of `hyprland.conf`. Toward `1.0` if text looks too soft,
+toward `0.85` for more glass.
 
 ## Wallpapers
 

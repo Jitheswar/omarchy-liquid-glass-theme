@@ -44,9 +44,13 @@ window#waybar > box {
     rgba(7, 16, 13, 0.36) 100%
   );
 
-  margin: 3px 8px 3px 8px;
+  /* Sized for `"height": 38` in config.jsonc (Omarchy ships 26, which leaves
+     the pill only ~18px of interior once margins and borders are taken out —
+     legible, but cramped). A theme cannot set that value; see the README. */
+  margin: 4px 10px 4px 10px;
+  padding: 0 4px;
   border: 1px solid @glass_edge;
-  border-radius: 10px;
+  border-radius: 14px;
 
   /* The specular edge, the shaded base, then the float. This trio is the
      whole illusion: without the first inset the bar goes flat instantly. */
@@ -72,12 +76,15 @@ window#waybar > box {
  * ends up square. `:not()` takes the specificity of its argument, so tacking a
  * never-matching class on bumps these to (1,1,1) and they survive. */
 #workspaces button:not(.liquid-glass-never) {
-  border-radius: 8px;
+  border-radius: 9px;
+  /* Vertical padding so the pill fills the taller bar instead of floating as a
+     small chip in the middle of it. Overrides the stylesheet's `padding: 0 6px`. */
+  padding: 4px 9px;
   transition: background-color 200ms ease, box-shadow 200ms ease;
 }
 
 #workspaces button.active {
-  border-radius: 8px;
+  border-radius: 9px;
   background-image: linear-gradient(
     to bottom,
     rgba(190, 235, 220, 0.17) 0%,
