@@ -325,13 +325,24 @@ those lines before lowering it.
 
 ## Wallpapers
 
-One: `1-omarchy-liquid-glass.png`.
+Six, the same wordmark in six hues: jade, sapphire, amber, crimson, magenta,
+violet. `1-omarchy-liquid-glass.png` is the default.
 
-The surfaces carry no colour, so the wallpaper decides what the whole desktop
-looks like — which cuts both ways. Anything dark with large smooth forms works,
-because a panel laid over something that curves reads as glass resting on
-glass, while a panel over a flat wash reads as a sticker. Drop your own into
-this directory and `omarchy theme bg next` will pick them up.
+They matter more here than in a normal theme. The surfaces carry no colour of
+their own, so whichever of these is up decides what the entire desktop looks
+like — bar, launcher, notifications and folder icons all take their hue from
+it. Switching wallpaper switches the theme, and nothing needs retuning.
+
+`omarchy theme bg next` cycles them.
+
+Your own work too: anything dark with large smooth forms suits this, because a
+panel laid over something that curves reads as glass resting on glass, while a
+panel over a flat wash reads as a sticker. Drop files into this directory and
+they join the cycle.
+
+The five colour variants are 1672x941 rather than 1920x1080 — that is the size
+they were made at, and `swaybg -m fill` scales them, so they are very slightly
+softer than the jade original on a 1080p panel.
 
 ## Notes
 
