@@ -36,11 +36,28 @@ python3 "$HARMONIZE" "$(readlink -f "$WALLPAPER")" --out "$THEME_DIR"
 # does include Omarchy's bin today — but a `|| true` on a command that is not
 # found is indistinguishable from success, and the failure mode is silent and
 # confusing: the palette regenerates and no terminal ever picks it up.
-RESTART="$(command -v omarchy-restart-terminal || true)"
-[[ -x $RESTART ]] || RESTART="$HOME/.local/share/omarchy/bin/omarchy-restart-terminal"
+omarchy_bin() {
+  local found
+  found="$(command -v "$1" || true)"
+  [[ -x $found ]] || found="$HOME/.local/share/omarchy/bin/$1"
+  [[ -x $found ]] && printf '%s' "$found"
+}
 
-if [[ -x $RESTART ]]; then
-  "$RESTART"
-else
-  echo "harmonize: omarchy-restart-terminal not found; palette written but not reloaded" >&2
-fi
+run_omarchy() {
+  local bin
+  bin="$(omarchy_bin "$1")"
+  if [[ -n $bin ]]; then
+    "$bin"
+  else
+    echo "harmonize: $1 not found; palette written but not applied" >&2
+  fi
+}
+
+run_omarchy omarchy-restart-terminal
+
+# The browser is the one surface that cannot take the wallpaper's colour through
+# glass — Chromium draws opaque and exposes no transparency setting — so the
+# tint is baked into its seed colour instead, and pushed out as a managed
+# policy. Omarchy's own script does that and also signals running browsers to
+# reread it, which is the only way a change lands without a restart.
+run_omarchy omarchy-theme-set-browser

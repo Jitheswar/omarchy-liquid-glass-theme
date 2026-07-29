@@ -106,6 +106,28 @@ def main():
             if palette[k] != H.BASE[k]:
                 failures.append(f"{name}: {k} is a grey and was changed to {palette[k]}")
 
+        # The browser seed is opaque, so it has to stay as dark as every other
+        # surface — a tint that also lightens would make the browser the one
+        # window that does not match.
+        seed = H.chrome_seed(target)
+        seed_L = H.to_lch(seed)[0]
+        neutral_L = H.to_lch(H.parse_hex(H.NEUTRALS["background"]))[0]
+        if abs(seed_L - neutral_L) > 0.02:
+            failures.append(f"{name}: browser seed {H.hex_of(seed)} sits at lightness "
+                            f"{seed_L:.3f}, against {neutral_L:.3f} for every other surface")
+
+        # Substituting into neovim.lua must not touch anything but the hexes we
+        # know the meaning of, and must leave a file Lua can still parse.
+        generated = H.write_neovim(palette, H.NEUTRALS, name, target)
+        with open(os.path.join(REPO, "neovim.lua")) as f:
+            original = f.read()
+        if len(generated.splitlines()) != len(original.splitlines()):
+            failures.append(f"{name}: neovim.lua changed line count, so the "
+                            f"substitution hit more than colour literals")
+        for grey in ("#0A0A0A", "#1A1A1A", "#2E2E2E", "#C6C6C6", "#6E6E6E", "#F2F2F2"):
+            if original.count(grey) != generated.count(grey):
+                failures.append(f"{name}: neovim.lua grey {grey} was rewritten")
+
     print()
     if failures:
         for f in failures:
