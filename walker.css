@@ -117,6 +117,27 @@ child:selected .item-box * {
   text-shadow: 0 0 3px rgba(7, 16, 13, 0.90);
 }
 
+/* The selected row's label is near-white like every other row, not jade.
+ *
+ * Omarchy's stylesheet paints it @selected-text, and jade text on a pill this
+ * theme has already tinted jade is close to invisible: 1.7:1 over a white
+ * window and still only 2.9:1 over the wallpaper, so it failed WCAG AA on
+ * every backdrop rather than just the awkward one. The pill underneath is
+ * doing the work anyway — a lit gradient, an accent tint and a specular top
+ * edge — and that is a stronger "selected" signal than recolouring six
+ * characters. Nothing is lost by letting the text stay legible.
+ *
+ * @selected-text is deliberately left defined and unchanged above; walker
+ * uses it elsewhere and this is not the place to decide that for it.
+ *
+ * The doubled class is load-bearing. Omarchy's rule is
+ * `child:selected .item-box *`, specificity (0,2,1), and it is declared after
+ * this file is imported — so an identical selector here would lose on order.
+ * Doubling `.item-box` makes this (0,3,1) and it wins on specificity instead. */
+child:selected .item-box.item-box * {
+  color: @foreground;
+}
+
 /* Selection is a nearer pane sliding under the cursor, lit along its top. */
 child:selected {
   /* radius-md (14px) — launcher row */

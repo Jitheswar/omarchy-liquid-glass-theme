@@ -180,14 +180,24 @@ documented at the site in `walker.css`. Measured over a blank white window:
 | | before | after |
 |---|---|---|
 | item labels | 2.3–3.1:1 | 4.4–5.5:1 |
+| selected row label | 1.0:1 | 2.9:1 |
 | search placeholder | 1.3:1 | 1.8:1 |
-| selected row label | 1.0:1 | 1.7:1 |
 
-Body text clears roughly WCAG AA now. The last two rows do not, and cannot be
-fixed by this route: the placeholder is deliberately at half opacity, and the
-selected row is jade text on a jade-lit pill, which is low contrast on *any*
-backdrop — it measures 2.9:1 even over the wallpaper. Raising the fill does
-nothing for either.
+Body text clears roughly WCAG AA now.
+
+The selected row took a second fix of its own. Omarchy's stylesheet paints its
+label jade, which on a pill this theme has *also* tinted jade was low contrast
+on every backdrop — 2.9:1 even over the wallpaper, where nothing is washing it
+out. That label is now the same near-white as every other row, and the pill's
+own tint and specular edge carry the "selected" signal instead, which they
+were already doing anyway. Over the wallpaper it went 2.9:1 → **5.0:1**, which
+clears AA outright; over a white window, 1.7:1 → 2.9:1.
+
+The two that remain short are short by construction. The placeholder is
+deliberately half-opacity, and the selected row still trails the others over
+white because the pill it sits on is *lighter* than the panel — a lit
+selection and a light backdrop pull in the same direction. Raising the fill
+does nothing for either.
 
 **Known limitation:** GTK-CSS cannot sample what is behind a surface, so no
 part of this can adapt to the backdrop — there is no `backdrop-luminance` to
