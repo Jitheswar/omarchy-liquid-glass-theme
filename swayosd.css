@@ -1,0 +1,28 @@
+/* Liquid Glass — SwayOSD
+ *
+ * ~/.config/swayosd/style.css imports this file, then styles `window` with an
+ * opaque @background-color and `border-radius: 0`. Colour is easy — the alpha
+ * rides along in the define below. The radius needs to outrank a plain element
+ * selector declared later, hence :not(); its specificity is that of its
+ * argument, so `window:not(.x)` beats a bare `window`.
+ *
+ * Frosting comes from `layerrule = blur on, match:namespace swayosd`. */
+
+@define-color background-color rgba(18, 38, 32, 0.58);
+@define-color border-color rgba(168, 228, 211, 0.22);
+@define-color label #d6e4de;
+@define-color image #d6e4de;
+@define-color progress #6bcca9;
+
+window:not(.liquid-glass-never) {
+  border-radius: 18px;
+}
+
+progressbar:not(.liquid-glass-never) {
+  border-radius: 8px;
+}
+
+progressbar trough {
+  background-color: rgba(107, 204, 169, 0.16);
+  border-radius: 8px;
+}

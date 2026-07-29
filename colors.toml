@@ -1,0 +1,42 @@
+# Liquid Glass — a jade palette sampled from the theme's own wallpaper.
+#
+# Every value below was pulled out of backgrounds/1-omarchy-liquid-glass.png
+# with an actual colour sample rather than eyeballed, so the desktop and the
+# wallpaper share one light source:
+#   background  the deepest point of the image, between the ribbons
+#   accent      the mint glow rimming the glass pill
+#   cursor      the specular hit where light catches a curved edge
+#   color8      the wallpaper's mid grey-green, so muted text sits in the
+#               same material as everything else
+#
+# Everything Omarchy generates (btop, helix, obsidian, gum, chromium,
+# hyprlock…) is derived from these values.
+
+accent               = "#6BCCA9"
+cursor               = "#A8E4D3"
+foreground           = "#D6E4DE"
+background           = "#070E0C"
+selection_foreground = "#070E0C"
+selection_background = "#6BCCA9"
+
+# Normal. The red/violet slots are deliberately kept off-jade: syntax
+# highlighting collapses into mush if every hue sits in the same 150-180°
+# wedge, so they provide the contrast the wallpaper doesn't.
+color0 = "#16241E"
+color1 = "#F2798F"
+color2 = "#5FC79E"
+color3 = "#E5CE8A"
+color4 = "#6FB6D6"
+color5 = "#B49BE0"
+color6 = "#7ED9D2"
+color7 = "#B2D2C9"
+
+# Bright
+color8  = "#4B7265"
+color9  = "#FF97A8"
+color10 = "#84DEB8"
+color11 = "#F5E2A8"
+color12 = "#96CFE8"
+color13 = "#CBB6F0"
+color14 = "#A8E4D3"
+color15 = "#E9F3EF"

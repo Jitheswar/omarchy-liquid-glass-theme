@@ -1,0 +1,61 @@
+# Liquid Glass — Alacritty
+#
+# This replaces Omarchy's generated alacritty.toml, so it carries the full
+# palette as well as the window alpha. Alacritty applies transparency to the
+# *background* only, leaving glyphs fully opaque — combined with Hyprland's
+# blur that produces frosted glass you can still read code through, which
+# lowering window opacity in the compositor would not.
+#
+# ~/.config/alacritty/alacritty.toml imports this before its own values, so
+# anything set here can still be overridden locally.
+
+[window]
+opacity = 0.84
+
+[colors.primary]
+background = "#070E0C"
+foreground = "#D6E4DE"
+
+[colors.cursor]
+text = "#070E0C"
+cursor = "#A8E4D3"
+
+[colors.vi_mode_cursor]
+text = "#070E0C"
+cursor = "#A8E4D3"
+
+[colors.search.matches]
+foreground = "#070E0C"
+background = "#E5CE8A"
+
+[colors.search.focused_match]
+foreground = "#070E0C"
+background = "#F2798F"
+
+[colors.footer_bar]
+foreground = "#070E0C"
+background = "#D6E4DE"
+
+[colors.selection]
+text = "#070E0C"
+background = "#6BCCA9"
+
+[colors.normal]
+black = "#16241E"
+red = "#F2798F"
+green = "#5FC79E"
+yellow = "#E5CE8A"
+blue = "#6FB6D6"
+magenta = "#B49BE0"
+cyan = "#7ED9D2"
+white = "#B2D2C9"
+
+[colors.bright]
+black = "#4B7265"
+red = "#FF97A8"
+green = "#84DEB8"
+yellow = "#F5E2A8"
+blue = "#96CFE8"
+magenta = "#CBB6F0"
+cyan = "#A8E4D3"
+white = "#E9F3EF"

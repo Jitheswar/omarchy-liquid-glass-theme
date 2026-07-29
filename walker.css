@@ -1,0 +1,47 @@
+/* Liquid Glass — Walker
+ *
+ * Omarchy's walker stylesheet imports this file, then applies
+ * `.box-wrapper { background: alpha(@base, 0.95); }`. GTK's alpha() multiplies
+ * whatever alpha the colour already carries, so giving @base a translucent
+ * value is enough to turn that opaque panel into glass — no specificity fight.
+ *
+ * Frosting comes from `layerrule = blur on, match:namespace walker`. */
+
+@define-color selected-text #6bcca9;
+@define-color text #d6e4de;
+
+/* Multiplied down to ~0.57 by the stylesheet's own alpha() call. */
+@define-color base rgba(18, 38, 32, 0.60);
+
+/* The rim, not a frame: bright enough to catch the eye, thin enough to read
+ * as a lit edge rather than a border. */
+@define-color border rgba(168, 228, 211, 0.22);
+
+@define-color foreground #d6e4de;
+@define-color background rgba(12, 26, 22, 0.55);
+
+/* border-radius is untouched by the stylesheet, so a plain rule lands. */
+.box-wrapper {
+  border-radius: 22px;
+}
+
+/* Doubling the class doubles specificity, which is what lets this override the
+ * later `.search-container { background: @base; }` and keep the launcher one
+ * continuous sheet instead of two stacked tints. */
+.search-container.search-container {
+  background-color: transparent;
+}
+
+.keybind-hints.keybind-hints {
+  background-color: transparent;
+  border-top: 1px solid rgba(168, 228, 211, 0.12);
+}
+
+/* Selection reads as a nearer pane sliding under the cursor. */
+child:selected {
+  border-radius: 12px;
+}
+
+.item-box {
+  border-radius: 12px;
+}
