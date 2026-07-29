@@ -1,0 +1,97 @@
+# Liquid Glass — btop
+#
+# Shipped rather than generated. Omarchy builds btop.theme from colors.toml
+# when a theme does not provide one, and colors.toml is still the jade palette
+# because terminals and syntax need hue. btop is not syntax, so it follows the
+# surfaces instead and carries no decorative colour.
+#
+# What stays coloured is what actually means something. The temperature ramp is
+# Green -> Yellow -> Red because that is a reading, not a decoration, and the
+# memory-available ramp warns the same way. Everything else — box borders, the
+# CPU and network and disk meters — is a grey ramp from dim to bright, which
+# still shows magnitude, just with brightness instead of hue. Same rule as the
+# bar: colour is held back until something has news.
+
+# Main background, empty for terminal default, need to be empty if you want transparent background
+theme[main_bg]="#000000"
+
+# Main text color
+theme[main_fg]="#E0E0E0"
+
+# Title color for boxes
+theme[title]="#EDEDED"
+
+# Highlight color for keyboard shortcuts
+theme[hi_fg]="#FFFFFF"
+
+# Background color of selected item in processes box
+theme[selected_bg]="#3A3A3A"
+
+# Foreground color of selected item in processes box
+theme[selected_fg]="#FFFFFF"
+
+# Color of inactive/disabled text
+theme[inactive_fg]="#6E6E6E"
+
+# Color of text appearing on top of graphs, i.e uptime and current network graph scaling
+theme[graph_text]="#C8C8C8"
+
+# Background color of the percentage meters
+theme[meter_bg]="#2A2A2A"
+
+# Misc colors for processes box including mini cpu graphs, details memory graph and details status text
+theme[proc_misc]="#C8C8C8"
+
+# CPU, Memory, Network, Proc box outline colors
+theme[cpu_box]="#8A8A8A"
+theme[mem_box]="#8A8A8A"
+theme[net_box]="#8A8A8A"
+theme[proc_box]="#8A8A8A"
+
+# Box divider line and small boxes line color
+theme[div_line]="#4A4A4A"
+
+# Temperature graph color (Green -> Yellow -> Red)
+theme[temp_start]="#5FC79E"
+theme[temp_mid]="#E5CE8A"
+theme[temp_end]="#F2798F"
+
+# CPU graph colors (Teal -> Lavender)
+theme[cpu_start]="#4F4F4F"
+theme[cpu_mid]="#9A9A9A"
+theme[cpu_end]="#F2F2F2"
+
+# Mem/Disk free meter (Mauve -> Lavender -> Blue)
+theme[free_start]="#4F4F4F"
+theme[free_mid]="#9A9A9A"
+theme[free_end]="#F2F2F2"
+
+# Mem/Disk cached meter (Sapphire -> Lavender)
+theme[cached_start]="#4F4F4F"
+theme[cached_mid]="#9A9A9A"
+theme[cached_end]="#F2F2F2"
+
+# Mem/Disk available meter (Peach -> Red)
+theme[available_start]="#E5CE8A"
+theme[available_mid]="#F2798F"
+theme[available_end]="#F2798F"
+
+# Mem/Disk used meter (Green -> Sky)
+theme[used_start]="#4F4F4F"
+theme[used_mid]="#9A9A9A"
+theme[used_end]="#F2F2F2"
+
+# Download graph colors (Peach -> Red)
+theme[download_start]="#4F4F4F"
+theme[download_mid]="#9A9A9A"
+theme[download_end]="#F2F2F2"
+
+# Upload graph colors (Green -> Sky)
+theme[upload_start]="#4F4F4F"
+theme[upload_mid]="#9A9A9A"
+theme[upload_end]="#F2F2F2"
+
+# Process box color gradient for threads, mem and cpu usage (Sapphire -> Mauve)
+theme[process_start]="#4F4F4F"
+theme[process_mid]="#9A9A9A"
+theme[process_end]="#F2F2F2"
