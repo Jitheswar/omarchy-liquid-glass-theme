@@ -112,6 +112,18 @@
 # the rest clips. The scale is what these surfaces aim at, not a promise that
 # every one of them lands it.
 
+# ── Palette ───────────────────────────────────────────────────────────────
+# Same duplication problem as the glass tokens above, and the same rule. The
+# four terminal configs ship the whole palette themselves rather than being
+# generated from this file, so every value below exists in five places. If you
+# change one here, grep the hex and update alacritty.toml, ghostty.conf,
+# kitty.conf and foot.ini — foot spells it twice, under [colors] and
+# [colors-dark]. neovim.lua carries its own copy under aether's names.
+#
+# That is not a hypothetical: bright cyan sat at #FFFFFF in all four terminals
+# for a while, against #96DCE2 here, so it was indistinguishable from bright
+# white in a terminal and correct everywhere else.
+
 accent               = "#FFFFFF"
 cursor               = "#FFFFFF"
 foreground           = "#E0E0E0"

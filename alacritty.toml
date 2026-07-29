@@ -38,7 +38,7 @@ background = "#E0E0E0"
 
 [colors.selection]
 text = "#0A0A0A"
-background = "#FFFFFF"
+background = "#C8C8C8"
 
 [colors.normal]
 black = "#1A1A1A"
@@ -57,5 +57,5 @@ green = "#8FD895"
 yellow = "#F5E2A8"
 blue = "#96CFE8"
 magenta = "#CBB6F0"
-cyan = "#FFFFFF"
+cyan = "#96DCE2"
 white = "#F2F2F2"
