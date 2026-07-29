@@ -27,14 +27,17 @@
  *    shadows below are doing more work than the background colour is.
  */
 
-@define-color foreground #e9f3ef;
+@define-color foreground #ededed;
 @define-color background rgba(0, 0, 0, 0);
 
-@define-color glass_raised rgba(107, 204, 169, 0.18);
+@define-color glass_raised rgba(255, 255, 255, 0.18);
 /* glass-edge */
-@define-color glass_edge rgba(233, 243, 239, 0.21);
-@define-color accent #6bcca9;
-@define-color muted #4b7265;
+@define-color glass_edge rgba(255, 255, 255, 0.21);
+/* Kept named "accent" because the stylesheet and every rule below reference
+   it, but it is no longer a colour — it is just full white. The theme has no
+   accent hue any more; emphasis is carried by brightness alone. */
+@define-color accent #ffffff;
+@define-color muted #8a8a8a;
 
 window#waybar {
   background-color: transparent;
@@ -47,11 +50,11 @@ window#waybar > box {
   background-image: linear-gradient(
     to bottom,
     /* glass-fill-top */
-    rgba(190, 235, 220, 0.16) 0%,
+    rgba(255, 255, 255, 0.16) 0%,
     /* glass-fill-mid */
-    rgba(30, 62, 52, 0.28) 45%,
+    rgba(0, 0, 0, 0.28) 45%,
     /* glass-fill-base */
-    rgba(7, 16, 13, 0.35) 100%
+    rgba(0, 0, 0, 0.35) 100%
   );
 
   /* Sized for `"height": 38` in config.jsonc (Omarchy ships 26, which leaves
@@ -67,7 +70,7 @@ window#waybar > box {
      whole illusion: without the first inset the bar goes flat instantly. */
   box-shadow:
     /* glass-specular */
-    inset 0 1px 0 rgba(240, 252, 248, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34),
     /* glass-shade */
     inset 0 -1px 0 rgba(0, 0, 0, 0.29),
     /* elev-1 — bar */
@@ -92,7 +95,7 @@ window#waybar > box {
      over the bright ribbon in the middle of the image, and at 0.20 the well
      washed out to nothing exactly there — the depth has to come from the
      chip's own fill rather than from whatever happens to be behind it. */
-  background-color: rgba(7, 16, 13, 0.28);
+  background-color: rgba(0, 0, 0, 0.28);
 
   /* radius-sm (9px) — a chip inside the bar pill, so it has to sit under
      radius-md (14px) or the nesting reads as two unrelated shapes. */
@@ -102,7 +105,7 @@ window#waybar > box {
     /* The recess. Blurred over 3px, unlike the bevel's hard 1px lines. */
     inset 0 1px 3px rgba(0, 0, 0, 0.38),
     /* The bottom lip, catching the same overhead light as everything else. */
-    inset 0 -1px 0 rgba(240, 252, 248, 0.14);
+    inset 0 -1px 0 rgba(255, 255, 255, 0.14);
 
   padding: 0 6px;
   margin: 5px 8px;
@@ -144,14 +147,15 @@ window#waybar > box {
   background-image: linear-gradient(
     to bottom,
     /* glass-fill-top */
-    rgba(190, 235, 220, 0.16) 0%,
-    /* Accent tint, not glass-fill-base: the pill is a *lit* surface, so its
-       body carries the accent rather than falling into shadow. */
-    rgba(107, 204, 169, 0.09) 100%
+    rgba(255, 255, 255, 0.16) 0%,
+    /* Not glass-fill-base: the pill is a *lit* surface, so its body stays
+       bright rather than falling into shadow. White at low alpha, like
+       everything else here — the hue comes from whatever is behind it. */
+    rgba(255, 255, 255, 0.09) 100%
   );
   box-shadow:
     /* glass-specular */
-    inset 0 1px 0 rgba(240, 252, 248, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34),
     /* glass-shade */
     inset 0 -1px 0 rgba(0, 0, 0, 0.29);
   color: @accent;
@@ -171,7 +175,7 @@ window#waybar > box {
   border-radius: 9px;
   /* Not glass-fill-top: a hover wash is a flat tint, not the top stop of a
      ramp. Kept well under the token so hover stays quieter than active. */
-  background-color: rgba(190, 235, 220, 0.10);
+  background-color: rgba(255, 255, 255, 0.10);
 }
 
 /* Occupied but not focused. The point of the bar's left third is answering
@@ -181,7 +185,7 @@ window#waybar > box {
    the lit pill next to it. */
 #workspaces button:not(.empty):not(.active):not(.liquid-glass-never) {
   color: @foreground;
-  background-color: rgba(190, 235, 220, 0.06);
+  background-color: rgba(255, 255, 255, 0.06);
 }
 
 #workspaces button.empty {
@@ -234,7 +238,7 @@ window#waybar > box {
   color: @muted;
 }
 
-/* Hover says "this is clickable" — most of these launch something. Colour
+/* Hover says "this is clickable" — most of these launch something. Brightness
    only: the modules sit 7.5px apart, which is not enough room for a
    background to land inside without touching its neighbours. */
 #custom-omarchy:hover,
@@ -252,21 +256,21 @@ tooltip {
   background-image: linear-gradient(
     to bottom,
     /* glass-fill-top */
-    rgba(190, 235, 220, 0.16) 0%,
+    rgba(255, 255, 255, 0.16) 0%,
     /* Deliberately *not* glass-fill-base. A tooltip is the one surface that
        appears over arbitrary content — an app's own window, not the wallpaper
        — so it needs a backing opaque enough to keep short text legible
        wherever it lands. glass-fill-base (0.35) is far too clear for that. */
-    rgba(10, 22, 19, 0.66) 100%
+    rgba(0, 0, 0, 0.66) 100%
   );
-  background-color: rgba(10, 22, 19, 0.55);
+  background-color: rgba(0, 0, 0, 0.55);
   border: 1px solid @glass_edge;
   /* radius-md (14px) — tooltip. Was 12px, off-scale for no reason. */
   border-radius: 14px;
   padding: 4px;
   box-shadow:
     /* glass-specular */
-    inset 0 1px 0 rgba(240, 252, 248, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34),
     /* elev-2 — tooltip */
     0 6px 18px rgba(0, 0, 0, 0.45);
 }

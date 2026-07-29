@@ -13,6 +13,17 @@
 # hyprlock…) is derived from these values.
 #
 # ── Glass material tokens ─────────────────────────────────────────────────
+# These six carry no hue, and that is the single most important thing about
+# them. Glass has no colour of its own; it takes the colour of whatever is
+# behind it. Every token below is white or black at some alpha, so a surface
+# built from them is a lens rather than a tinted sheet — over a green
+# wallpaper it is green, over a photograph it is whatever the photograph is,
+# and it needs no per-wallpaper retuning to stay coherent.
+#
+# The palette further down is a different matter and stays as it is: terminal
+# and syntax colours have to be distinguishable from each other, which is a
+# job hue does and alpha cannot.
+#
 # Reference only. GTK-CSS cannot import from a TOML file, so waybar.css,
 # walker.css and swayosd.css each spell these out inline and name the token in
 # a comment above the declaration. This block is the one place they are
@@ -21,20 +32,20 @@
 # to drift by a few points of alpha per file, which is invisible on any one
 # surface and obvious when two sit next to each other.
 #
-#   glass-fill-top   rgba(190, 235, 220, 0.16)
+#   glass-fill-top   rgba(255, 255, 255, 0.16)
 #       Top stop of the pane gradient. The lit edge where the glass curves up
 #       to meet the light — the brightest point of the body.
 #
-#   glass-fill-mid   rgba(30, 62, 52, 0.28)
+#   glass-fill-mid   rgba(0, 0, 0, 0.28)
 #       Middle stop, at 45%. The body of the lens, where it is thickest.
 #
-#   glass-fill-base  rgba(7, 16, 13, 0.35)
+#   glass-fill-base  rgba(0, 0, 0, 0.35)
 #       Bottom stop. Where the pane falls into its own shadow.
 #
-#   glass-edge       rgba(233, 243, 239, 0.21)
+#   glass-edge       rgba(255, 255, 255, 0.21)
 #       The 1px rim around a surface. Reads as the cut edge of the sheet.
 #
-#   glass-specular   rgba(240, 252, 248, 0.34)
+#   glass-specular   rgba(255, 255, 255, 0.34)
 #       inset 0 1px 0 — the highlight running along the top edge. Remove this
 #       one line and every surface in the theme goes flat instantly.
 #
