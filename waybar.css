@@ -74,11 +74,38 @@ window#waybar > box {
     0 3px 10px rgba(0, 0, 0, 0.40);
 }
 
-/* Modules sit *on* the glass, so they stay clear until they need to speak. */
-.modules-left,
-.modules-center,
-.modules-right {
-  background-color: transparent;
+/* The bar is one raised pane; the clusters are pressed *into* it.
+ *
+ * This is the same trick as the OSD's progress trough, and the reason the bar
+ * stops reading as a flat strip with icons floating on it: a recess is the
+ * exact inverse of the bevel above. Where the pane is lit along its top edge
+ * and shaded at the base, a well is shaded at the top — light cannot reach
+ * into it — and catches a thin highlight on the bottom lip where the floor
+ * turns back up to meet you. Two depths in one surface is all it takes.
+ *
+ * Doubled class selectors (0,2,0) because the stylesheet sets margins on
+ * these same elements later; see note 1 at the top of the file. */
+.modules-left.modules-left,
+.modules-center.modules-center,
+.modules-right.modules-right {
+  /* Deep enough to survive the wallpaper. The bar spends part of its width
+     over the bright ribbon in the middle of the image, and at 0.20 the well
+     washed out to nothing exactly there — the depth has to come from the
+     chip's own fill rather than from whatever happens to be behind it. */
+  background-color: rgba(7, 16, 13, 0.28);
+
+  /* radius-sm (9px) — a chip inside the bar pill, so it has to sit under
+     radius-md (14px) or the nesting reads as two unrelated shapes. */
+  border-radius: 9px;
+
+  box-shadow:
+    /* The recess. Blurred over 3px, unlike the bevel's hard 1px lines. */
+    inset 0 1px 3px rgba(0, 0, 0, 0.38),
+    /* The bottom lip, catching the same overhead light as everything else. */
+    inset 0 -1px 0 rgba(240, 252, 248, 0.14);
+
+  padding: 0 6px;
+  margin: 5px 8px;
 }
 
 /* The active workspace is a second, nearer piece of glass — same construction
@@ -95,6 +122,11 @@ window#waybar > box {
   /* Vertical padding so the pill fills the taller bar instead of floating as a
      small chip in the middle of it. Overrides the stylesheet's `padding: 0 6px`. */
   padding: 4px 9px;
+
+  /* Up from the stylesheet's 1.5px. At that spacing the pills touch and read
+     as one segmented strip, which was fine on a flat bar and is not now that
+     they sit in a well — inside a tray they want to read as separate keys. */
+  margin: 0 3px;
   /* Overshoot on press: the pill goes slightly past its lit state and settles
      back, which is what makes a click feel like it landed on something solid
      rather than fading into it. Unlike the compositor's layer animations this
@@ -123,6 +155,14 @@ window#waybar > box {
     /* glass-shade */
     inset 0 -1px 0 rgba(0, 0, 0, 0.29);
   color: @accent;
+
+  /* An accent bloom belongs here — this is the one genuinely lit element on
+     the bar — and it was tried and removed. `0 0 8px` renders nothing on a
+     workspace button: GTK clips the outer shadow to the widget, and widening
+     the margin from 1.5px to 4px to give it somewhere to land changed
+     nothing, so the clip is the button's own, not a spacing problem. Same
+     lesson as the OSD's elev-1 in swayosd.css. Left out rather than left in
+     doing nothing. */
 }
 
 #workspaces button:hover {
@@ -134,8 +174,77 @@ window#waybar > box {
   background-color: rgba(190, 235, 220, 0.10);
 }
 
+/* Occupied but not focused. The point of the bar's left third is answering
+   "where is my stuff" at a glance, and a flat row of numerals does not: empty
+   and occupied looked identical apart from a slight dimming. A faint fill is
+   enough — it reads as a workspace with weight in it without competing with
+   the lit pill next to it. */
+#workspaces button:not(.empty):not(.active):not(.liquid-glass-never) {
+  color: @foreground;
+  background-color: rgba(190, 235, 220, 0.06);
+}
+
 #workspaces button.empty {
   color: @muted;
+}
+
+/* Urgent is the one workspace state that should interrupt you. */
+#workspaces button.urgent {
+  color: #f2798f;
+  background-color: rgba(242, 121, 143, 0.14);
+}
+
+/* ── Module state ──────────────────────────────────────────────────────────
+ * Everything on the right is @foreground at rest, on purpose. A bar that is
+ * permanently multicoloured has no way left to tell you something changed —
+ * the colour has already been spent on decoration. So the palette's off-jade
+ * slots stay holstered until a module actually has news, and then they mean
+ * something.
+ *
+ * The far-left launcher is the exception: it is a button rather than a
+ * readout, and jade marks it as the one thing here you press. */
+#custom-omarchy {
+  color: @accent;
+}
+
+#battery.charging {
+  color: #84deb8;
+}
+
+#battery.warning {
+  color: #e5ce8a;
+}
+
+#battery.critical {
+  color: #f2798f;
+}
+
+/* Deliberately not animated. A pulse is the obvious move and it is the wrong
+   one: it repaints the bar every frame, which costs power at exactly the
+   moment there is none left to spend. Red against a jade bar is already the
+   loudest thing on screen. */
+
+#network.disconnected {
+  color: #f2798f;
+}
+
+#pulseaudio.muted,
+#bluetooth.disabled,
+#bluetooth.off {
+  color: @muted;
+}
+
+/* Hover says "this is clickable" — most of these launch something. Colour
+   only: the modules sit 7.5px apart, which is not enough room for a
+   background to land inside without touching its neighbours. */
+#custom-omarchy:hover,
+#clock:hover,
+#bluetooth:hover,
+#network:hover,
+#pulseaudio:hover,
+#cpu:hover,
+#battery:hover {
+  color: @accent;
 }
 
 /* Tooltips are their own surface, so the material is spelled out again. */
