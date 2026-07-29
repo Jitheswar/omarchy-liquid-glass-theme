@@ -15,8 +15,10 @@ cannot fake. The rest is Hyprland's blur, a set of layer rules and per-app
 background alpha, working together so every surface reads as a translucent
 pane lit from the same direction.
 
-The terminal and syntax palette is a separate matter and stays jade — hue is
-load-bearing there in a way it never was on a bar.
+There is no theme colour left anywhere, including the palette. The only hues
+that survive are the ANSI 16, and only because `ls` needs a directory to look
+different from a file and `git diff` needs an addition to look different from a
+deletion. Those are readings, not decoration.
 
 ![Liquid Glass](backgrounds/1-omarchy-liquid-glass.png)
 
@@ -107,26 +109,24 @@ omarchy theme set "Liquid Glass"
 
 ## The palette
 
-This drives terminals, syntax highlighting and everything Omarchy generates
-from `colors.toml` — **not** the desktop surfaces, which carry no colour. Every
-value was sampled out of `backgrounds/1-omarchy-liquid-glass.png` rather than
-picked by eye.
-
-Hue stays here because it is doing work that alpha cannot: `color1` has to be
-distinguishable from `color2` at a glance in a diff or a stack trace. On a bar
-it was only decoration, which is why it is gone from there.
+Neutral. Everything structural — background, foreground, cursor, accent,
+selection and all four greys — is a grey, so nothing in this file tints the
+desktop.
 
 | Role | Colour | |
 |---|---|---|
-| `background` | `#070E0C` | the deepest point of the wallpaper, between the ribbons |
-| `foreground` | `#D6E4DE` | cool off-white with a green cast |
-| `accent` | `#6BCCA9` | the mint glow rimming the glass pill |
-| `cursor` | `#A8E4D3` | the specular hit where light catches a curved edge |
-| `color8` | `#4B7265` | the wallpaper's mid grey-green, for muted text |
+| `background` | `#0A0A0A` | near-black, no cast |
+| `foreground` | `#E0E0E0` | plain off-white |
+| `accent` | `#FFFFFF` | emphasis is brightness now, not hue |
+| `cursor` | `#FFFFFF` | |
+| `color8` | `#6E6E6E` | muted text |
 
-The red and violet slots (`color1`, `color5`) are deliberately kept off-jade.
-Syntax highlighting collapses into mush if every hue sits inside the same
-150–180° wedge, so those two carry the contrast the wallpaper doesn't.
+The ANSI 16 keep their hues, and that is not a hedge. `color2` is what `ls`
+paints a directory and what `git diff` paints an addition; `color1` is what it
+paints a deletion. Greying those out would not remove theme colour, it would
+remove the ability to tell one thing from another. They are spread deliberately
+wide, because syntax collapses into mush if every hue sits in the same wedge —
+the green and cyan simply lost the mint cast they used to carry.
 
 ## How the glass is built
 
@@ -201,7 +201,7 @@ documented at the site in `walker.css`. Measured over a blank white window:
 Body text clears roughly WCAG AA now.
 
 The selected row took a second fix of its own. Omarchy's stylesheet paints its
-label jade, which on a pill this theme has *also* tinted jade was low contrast
+label with the accent, which on a pill this theme had *also* tinted was low contrast
 on every backdrop — 2.9:1 even over the wallpaper, where nothing is washing it
 out. That label is now the same near-white as every other row, and the pill's
 own tint and specular edge carry the "selected" signal instead, which they
@@ -345,7 +345,7 @@ Cycle with `omarchy theme bg next`.
 
 - Icons use `Yaru-prussiangreen-dark`, which ships with Omarchy.
 - VS Code points at **Ocean Green: Dark** (`jovejonovski.ocean-green`), the
-  closest jade theme on the marketplace; Omarchy installs it on first switch.
+  closest dark theme on the marketplace; Omarchy installs it on first switch.
 - Neovim needs `bjarneo/aether.nvim`, which LazyVim will fetch on next start.
 
 ## Licence

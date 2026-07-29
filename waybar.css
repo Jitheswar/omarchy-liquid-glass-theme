@@ -201,8 +201,8 @@ window#waybar > box {
 /* ── Module state ──────────────────────────────────────────────────────────
  * Everything on the right is @foreground at rest, on purpose. A bar that is
  * permanently multicoloured has no way left to tell you something changed —
- * the colour has already been spent on decoration. So the palette's off-jade
- * slots stay holstered until a module actually has news, and then they mean
+ * the colour has already been spent on decoration. So the only hues on this
+ * bar stay holstered until a module actually has news, and then they mean
  * something.
  *
  * The far-left launcher is the exception: it is a button rather than a
@@ -212,7 +212,7 @@ window#waybar > box {
 }
 
 #battery.charging {
-  color: #84deb8;
+  color: #8fd895;
 }
 
 #battery.warning {
@@ -225,8 +225,8 @@ window#waybar > box {
 
 /* Deliberately not animated. A pulse is the obvious move and it is the wrong
    one: it repaints the bar every frame, which costs power at exactly the
-   moment there is none left to spend. Red against a jade bar is already the
-   loudest thing on screen. */
+   moment there is none left to spend. Red against a bar with no other colour
+   on it is already the loudest thing on screen. */
 
 #network.disconnected {
   color: #f2798f;

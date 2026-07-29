@@ -141,8 +141,9 @@ child:selected .item-box * {
 
 /* The selected row's label is near-white like every other row.
  *
- * Omarchy's stylesheet paints it @selected-text, and jade text on a pill this
- * theme has already tinted jade is close to invisible: 1.7:1 over a white
+ * Omarchy's stylesheet paints it @selected-text, and back when that was jade,
+ * on a pill this theme had also tinted jade, it was close to invisible: 1.7:1
+ * over a white
  * window and still only 2.9:1 over the wallpaper, so it failed WCAG AA on
  * every backdrop rather than just the awkward one. The pill underneath is
  * doing the work anyway — a lit gradient, an accent tint and a specular top

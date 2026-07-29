@@ -1,13 +1,14 @@
-# Liquid Glass — a jade palette sampled from the theme's own wallpaper.
+# Liquid Glass — a neutral palette.
 #
-# Every value below was pulled out of backgrounds/1-omarchy-liquid-glass.png
-# with an actual colour sample rather than eyeballed, so the desktop and the
-# wallpaper share one light source:
-#   background  the deepest point of the image, between the ribbons
-#   accent      the mint glow rimming the glass pill
-#   cursor      the specular hit where light catches a curved edge
-#   color8      the wallpaper's mid grey-green, so muted text sits in the
-#               same material as everything else
+# There is no theme colour here any more. Background, foreground, cursor,
+# accent, selection and all four greys are neutral, so nothing tints the
+# desktop from this file the way the old jade palette did.
+#
+# The ANSI slots below are the exception, and it is not a hedge. color2 is what
+# `ls` paints a directory and what `git diff` paints an addition; color1 is what
+# it paints a deletion. Those are not decoration — greying them out does not
+# remove jade, it removes the ability to tell one thing from another. They keep
+# their hues, minus the mint cast the green and cyan used to carry.
 #
 # Everything Omarchy generates (btop, helix, obsidian, gum, chromium,
 # hyprlock…) is derived from these values.
@@ -111,31 +112,31 @@
 # the rest clips. The scale is what these surfaces aim at, not a promise that
 # every one of them lands it.
 
-accent               = "#6BCCA9"
-cursor               = "#A8E4D3"
-foreground           = "#D6E4DE"
-background           = "#070E0C"
-selection_foreground = "#070E0C"
-selection_background = "#6BCCA9"
+accent               = "#FFFFFF"
+cursor               = "#FFFFFF"
+foreground           = "#E0E0E0"
+background           = "#0A0A0A"
+selection_foreground = "#0A0A0A"
+selection_background = "#C8C8C8"
 
-# Normal. The red/violet slots are deliberately kept off-jade: syntax
-# highlighting collapses into mush if every hue sits in the same 150-180°
-# wedge, so they provide the contrast the wallpaper doesn't.
-color0 = "#16241E"
+# Normal. These are the ANSI 16 and stay hues, for the reason at the top of the
+# file. They are spread deliberately wide — syntax highlighting collapses into
+# mush if every colour sits in the same wedge.
+color0 = "#1A1A1A"
 color1 = "#F2798F"
-color2 = "#5FC79E"
+color2 = "#6FBF7A"
 color3 = "#E5CE8A"
 color4 = "#6FB6D6"
 color5 = "#B49BE0"
-color6 = "#7ED9D2"
-color7 = "#B2D2C9"
+color6 = "#74C7CE"
+color7 = "#C6C6C6"
 
 # Bright
-color8  = "#4B7265"
+color8  = "#6E6E6E"
 color9  = "#FF97A8"
-color10 = "#84DEB8"
+color10 = "#8FD895"
 color11 = "#F5E2A8"
 color12 = "#96CFE8"
 color13 = "#CBB6F0"
-color14 = "#A8E4D3"
-color15 = "#E9F3EF"
+color14 = "#96DCE2"
+color15 = "#F2F2F2"

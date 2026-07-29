@@ -1,8 +1,8 @@
 /* Liquid Glass — screen-share picker
  *
- * Shipped rather than generated. This dialog is chrome, so it follows the
- * surfaces and carries no hue; colors.toml stays jade for terminals and
- * syntax. See btop.theme for the same reasoning. */
+ * Shipped rather than generated, because what Omarchy builds from a palette
+ * is not what this dialog should be. It carries no hue, like everything else.
+ * See btop.theme for the same reasoning. */
 
 @define-color foreground #E0E0E0;
 @define-color background #000000;
