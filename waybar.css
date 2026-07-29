@@ -95,7 +95,15 @@ window#waybar > box {
   /* Vertical padding so the pill fills the taller bar instead of floating as a
      small chip in the middle of it. Overrides the stylesheet's `padding: 0 6px`. */
   padding: 4px 9px;
-  transition: background-color 200ms ease, box-shadow 200ms ease;
+  /* Overshoot on press: the pill goes slightly past its lit state and settles
+     back, which is what makes a click feel like it landed on something solid
+     rather than fading into it. Unlike the compositor's layer animations this
+     one *can* overshoot visibly — the control point above 1.0 pushes the
+     colour past its target before it comes back. 180ms, short enough that
+     clicking through workspaces does not smear. */
+  transition:
+    background-color 180ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 180ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 #workspaces button.active {

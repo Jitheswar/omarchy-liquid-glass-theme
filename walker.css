@@ -93,4 +93,13 @@ child:selected .item-box {
 .item-box {
   /* radius-md (14px) — launcher row */
   border-radius: 14px;
+
+  /* Same overshoot as the bar's workspace pill, at the bottom of the
+     160-200ms range rather than the middle. The launcher is arrowed through,
+     not clicked once: at 180ms holding a cursor key leaves the highlight
+     visibly trailing the selection, and the shorter time is what keeps it
+     attached. Only box-shadow is listed, so the specular edge eases in while
+     the fill switches immediately — the row reads as selected the instant the
+     key repeats, and the light catches up. */
+  transition: box-shadow 160ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
