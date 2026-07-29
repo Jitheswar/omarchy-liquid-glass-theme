@@ -10,6 +10,46 @@ direction.
 
 ![Liquid Glass](backgrounds/1-omarchy-liquid-glass.png)
 
+## Requirements
+
+**Hyprland 0.53.0 or newer.** Two things set that floor, and both fail
+loudly rather than degrading, so it is worth checking before installing:
+
+| Feature | Needs | Why |
+|---|---|---|
+| `decoration:rounding_power = 4.5` | 0.47.0 | squircle corners — added as "supercircular window corners" ([#8943](https://github.com/hyprwm/Hyprland/pull/8943)) |
+| `windowrule`/`layerrule … match:…` | 0.53.0 | the rule syntax was rewritten and the old comma form removed ([#12269](https://github.com/hyprwm/Hyprland/pull/12269)) |
+
+0.53.0 is the binding one. On anything older every `windowrule` and
+`layerrule` in `hyprland.conf` is a config error, which means no blur on the
+bar, launcher, notifications or OSD, and no window transparency — the theme
+would load as a palette and nothing else. Check with `hyprctl version`.
+
+Omarchy 3.x ships well past this, so if the theme installs through
+`omarchy theme install` you are already fine. Developed and verified against
+Hyprland 0.56.0 / Omarchy 3.8.4.
+
+### Verified
+
+- **Fractional and mixed scaling.** Checked on a second output at `scale
+  1.5` alongside the built-in panel at `1.0`. The bar renders correctly at
+  both — 1px rim intact, radius correct, blur working, no seams or doubled
+  edges. Compositor cost was unchanged within measurement noise when the
+  second output was added.
+- **Multi-GPU.** This machine has Intel and NVIDIA adapters; Hyprland renders
+  on the Intel one. Nothing here is GPU-specific, but the theme has not been
+  tested with the compositor driven from a discrete GPU.
+- **Not verified: two *physical* monitors.** Only one physical display was
+  available, so the second output above was a virtual one. Multi-monitor
+  frame time is therefore untested, as is anything involving differing
+  refresh rates. No GPU profiler was installed, so the load figure above is
+  compositor CPU time, not GPU frame time.
+- **Terminal legibility.** Unchanged, and measured rather than assumed:
+  glyph-to-background contrast across an Alacritty window at `alpha = 0.74`
+  has a median of 14.6:1, against 14.9:1 for the same colours fully opaque.
+  Terminals only make the *background* translucent, so the glyphs never
+  thin out. All four terminal configs are untouched by any of the above.
+
 ## Install
 
 ```bash
