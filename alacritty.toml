@@ -10,7 +10,7 @@
 # anything set here can still be overridden locally.
 
 [window]
-opacity = 0.84
+opacity = 0.74
 
 [colors.primary]
 background = "#070E0C"

@@ -1,47 +1,71 @@
 /* Liquid Glass — Walker
  *
  * Omarchy's walker stylesheet imports this file, then applies
- * `.box-wrapper { background: alpha(@base, 0.95); }`. GTK's alpha() multiplies
- * whatever alpha the colour already carries, so giving @base a translucent
- * value is enough to turn that opaque panel into glass — no specificity fight.
+ * `.box-wrapper { background: alpha(@base, 0.95); }`. Two consequences:
+ *
+ *   - alpha() *multiplies* the alpha already on the colour, so giving @base a
+ *     translucent value is enough to thin the panel out — no override needed.
+ *   - that `background:` shorthand also resets background-image to none, and
+ *     it is declared after this file. Doubling the class below (0,2,0 beats
+ *     0,1,0) is what lets the gradient survive it.
  *
  * Frosting comes from `layerrule = blur on, match:namespace walker`. */
 
 @define-color selected-text #6bcca9;
-@define-color text #d6e4de;
+@define-color text #e9f3ef;
 
-/* Multiplied down to ~0.57 by the stylesheet's own alpha() call. */
-@define-color base rgba(18, 38, 32, 0.60);
+/* Thinned to ~0.28 by the stylesheet's own alpha() call. The gradient below
+   supplies the actual material; this is just the tint underneath it. */
+@define-color base rgba(18, 38, 32, 0.30);
 
-/* The rim, not a frame: bright enough to catch the eye, thin enough to read
- * as a lit edge rather than a border. */
-@define-color border rgba(168, 228, 211, 0.22);
+@define-color border rgba(233, 243, 239, 0.22);
+@define-color foreground #e9f3ef;
+@define-color background rgba(10, 22, 19, 0.40);
 
-@define-color foreground #d6e4de;
-@define-color background rgba(12, 26, 22, 0.55);
+.box-wrapper.box-wrapper {
+  /* Same construction as the bar: lit at the top, shaded at the base. */
+  background-image: linear-gradient(
+    to bottom,
+    rgba(190, 235, 220, 0.15) 0%,
+    rgba(30, 62, 52, 0.26) 45%,
+    rgba(7, 16, 13, 0.34) 100%
+  );
 
-/* border-radius is untouched by the stylesheet, so a plain rule lands. */
-.box-wrapper {
-  border-radius: 22px;
+  border-radius: 26px;
+  border: 1px solid @border;
+
+  box-shadow:
+    inset 0 1px 0 rgba(240, 252, 248, 0.34),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.28),
+    0 12px 40px rgba(0, 0, 0, 0.50);
 }
 
-/* Doubling the class doubles specificity, which is what lets this override the
- * later `.search-container { background: @base; }` and keep the launcher one
- * continuous sheet instead of two stacked tints. */
+/* Keep the launcher one continuous sheet instead of stacked tints. */
 .search-container.search-container {
   background-color: transparent;
+  border-bottom: 1px solid rgba(233, 243, 239, 0.10);
 }
 
 .keybind-hints.keybind-hints {
   background-color: transparent;
-  border-top: 1px solid rgba(168, 228, 211, 0.12);
+  border-top: 1px solid rgba(233, 243, 239, 0.10);
 }
 
-/* Selection reads as a nearer pane sliding under the cursor. */
+/* Selection is a nearer pane sliding under the cursor, lit along its top. */
 child:selected {
-  border-radius: 12px;
+  border-radius: 14px;
+}
+
+child:selected .item-box {
+  background-image: linear-gradient(
+    to bottom,
+    rgba(190, 235, 220, 0.16) 0%,
+    rgba(107, 204, 169, 0.08) 100%
+  );
+  box-shadow: inset 0 1px 0 rgba(240, 252, 248, 0.30);
+  border-radius: 14px;
 }
 
 .item-box {
-  border-radius: 12px;
+  border-radius: 14px;
 }

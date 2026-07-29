@@ -2,20 +2,29 @@
  *
  * ~/.config/swayosd/style.css imports this file, then styles `window` with an
  * opaque @background-color and `border-radius: 0`. Colour is easy — the alpha
- * rides along in the define below. The radius needs to outrank a plain element
- * selector declared later, hence :not(); its specificity is that of its
- * argument, so `window:not(.x)` beats a bare `window`.
+ * rides along in the define below. The radius and the gradient need to outrank
+ * a plain element selector declared later, hence :not(); its specificity is
+ * that of its argument, so `window:not(.x)` beats a bare `window`.
  *
  * Frosting comes from `layerrule = blur on, match:namespace swayosd`. */
 
-@define-color background-color rgba(18, 38, 32, 0.58);
-@define-color border-color rgba(168, 228, 211, 0.22);
-@define-color label #d6e4de;
-@define-color image #d6e4de;
+@define-color background-color rgba(18, 38, 32, 0.30);
+@define-color border-color rgba(233, 243, 239, 0.22);
+@define-color label #e9f3ef;
+@define-color image #e9f3ef;
 @define-color progress #6bcca9;
 
 window:not(.liquid-glass-never) {
-  border-radius: 18px;
+  border-radius: 22px;
+  background-image: linear-gradient(
+    to bottom,
+    rgba(190, 235, 220, 0.16) 0%,
+    rgba(30, 62, 52, 0.26) 45%,
+    rgba(7, 16, 13, 0.34) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(240, 252, 248, 0.34),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.28);
 }
 
 progressbar:not(.liquid-glass-never) {
@@ -23,6 +32,12 @@ progressbar:not(.liquid-glass-never) {
 }
 
 progressbar trough {
-  background-color: rgba(107, 204, 169, 0.16);
+  background-color: rgba(10, 22, 19, 0.45);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
   border-radius: 8px;
+}
+
+progressbar progress {
+  border-radius: 8px;
+  box-shadow: inset 0 1px 0 rgba(240, 252, 248, 0.35);
 }

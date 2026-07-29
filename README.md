@@ -43,27 +43,47 @@ Syntax highlighting collapses into mush if every hue sits inside the same
 
 ## How the glass is built
 
+The target is clear, lit glass — not frost. Those are opposite settings, and
+it's worth being explicit about why, because the obvious knobs push the wrong
+way. **Frost is diffusion**: many blur passes plus grain, tuned to *hide* what
+sits behind. This aims at something you look *through*.
+
+**Blur is kept low.** Size 4, three passes. At size 8 and four passes you get a
+fogged panel; down here the shapes behind stay legible, which is what makes the
+pane read as transparent rather than merely tinted. This is the single biggest
+difference from a frosted theme.
+
+**Grain is switched off.** `noise = 0.003`, near Hyprland's floor. Grain is
+exactly what the eye reads as "frosted" — it is the texture of etched glass.
+Just enough is left to stop the wallpaper's wide gradients from banding.
+
+**The glass is lit, not veiled.** `brightness = 1.18` lifts the pane off the
+wallpaper so it looks illuminated instead of smeared, and `vibrancy = 0.80`
+puts back the saturation a plain gaussian washes out, so colour bleeds through
+as refraction rather than grey.
+
+**The edge does most of the work.** A 3px border with a 90° gradient — near
+white at the top falling to near black at the base — reads as a bevel catching
+a single overhead light. At 1px it collapses into a plain outline. In the GTK
+surfaces the same idea is an `inset 0 1px 0` highlight plus a vertical
+gradient body; remove that one inset shadow and the bar goes flat instantly.
+
 **Transparency comes from the app, not the compositor.** Each terminal sets its
-own background alpha (`0.84`) while leaving glyphs fully opaque. Lowering
+own background alpha (`0.74`) while leaving glyphs fully opaque. Lowering
 window opacity in Hyprland instead would fade the text along with the
-background, which is why `active_opacity` stays at `1.0` here.
+background, which is why `active_opacity` stays at `1.0`.
 
-**Blur is what turns transparency into glass.** Four passes at size 7, with
-`vibrancy` at `0.35` to put back the saturation a plain gaussian blur washes
-out — the difference between glass and fog. A little `noise` hides the banding
-that four passes would otherwise expose across the wallpaper's wide gradients.
-
-**Corners are squircles.** `rounding_power = 3.0` gives continuous curvature
-rather than a circular arc, which is most of what makes an edge look moulded
-instead of cut.
+**Corners are squircles.** `rounding = 20` (Hyprland's ceiling) at
+`rounding_power = 4.5` gives continuous curvature rather than a circular arc
+pasted onto a straight edge — most of what makes a corner look moulded.
 
 **Shell surfaces are layers, not windows**, so they need their own rules —
-`layerrule = blur on` per namespace, plus `ignore_alpha` so the transparent
-margin around a floating panel doesn't get blurred along with the panel.
+`layerrule = blur on` per namespace, plus `ignore_alpha` so the clear margin
+around a floating panel doesn't get blurred along with the panel.
 
-`xray` is off on purpose: seeing other windows blurred behind the front one is
-the layered depth the theme is built around. Turn it on in `hyprland.conf` to
-trade that for lower GPU load.
+`xray` is off on purpose: seeing other windows refracted behind the front one
+is the layered depth the theme is built around. Turn it on in `hyprland.conf`
+to trade that for lower GPU load.
 
 ## What's in here
 
@@ -84,16 +104,24 @@ generated template — worth reading before changing one.
 
 ## Tuning
 
-Turn the effect down if it's heavy on your GPU, in `hyprland.conf`:
+Lighter on the GPU, in `hyprland.conf`:
 
 ```ini
-decoration:blur:passes = 2      # from 4
+decoration:blur:passes = 2      # from 3
 decoration:blur:xray   = true   # blur only the wallpaper, not windows behind
 ```
 
-Or make the panes clearer/foggier by changing `opacity` in `alacritty.toml`,
+Want it frosted instead of clear? Push the two settings that define the
+difference:
+
+```ini
+decoration:blur:size  = 8       # from 4
+decoration:blur:noise = 0.02    # from 0.003 — grain is what reads as "frosted"
+```
+
+Clearer or more solid panes: `opacity` in `alacritty.toml`,
 `background-opacity` in `ghostty.conf`, `background_opacity` in `kitty.conf`,
-and `alpha` in `foot.ini`.
+`alpha` in `foot.ini`. Below about `0.65` text starts to fight the wallpaper.
 
 ## Wallpapers
 
