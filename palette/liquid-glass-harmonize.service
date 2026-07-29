@@ -1,0 +1,13 @@
+[Unit]
+Description=Harmonize the Liquid Glass terminal palette with the current wallpaper
+Documentation=https://github.com/Jitheswar/omarchy-liquid-glass-theme
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/liquid-glass-harmonize
+
+# The path unit can fire several times for one wallpaper change — replacing a
+# symlink is more than one inotify event, and omarchy-theme-set writes into
+# this directory repeatedly. Regenerating four small files twice is harmless,
+# but the terminal reload it triggers is visible, so collapse the burst.
+ExecStartPre=/usr/bin/sleep 0.4

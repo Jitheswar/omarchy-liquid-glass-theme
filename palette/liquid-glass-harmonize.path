@@ -1,0 +1,18 @@
+[Unit]
+Description=Watch for an Omarchy wallpaper change
+Documentation=https://github.com/Jitheswar/omarchy-liquid-glass-theme
+
+[Path]
+# The directory, not the symlink inside it. omarchy-theme-bg-next replaces the
+# background symlink with `ln -nsf`, which is a rename in the parent directory
+# — an inotify watch on the symlink itself never sees it, because the thing
+# being watched is precisely what got replaced.
+#
+# Watching the directory also picks up `omarchy theme set`, which rewrites
+# theme.name and swaps the theme directory in here. That is wanted: a theme
+# switch rebuilds current/theme from the repo and discards the harmonized
+# palette, so it has to be regenerated straight afterwards.
+PathChanged=%h/.config/omarchy/current
+
+[Install]
+WantedBy=default.target

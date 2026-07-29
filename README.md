@@ -154,6 +154,78 @@ remove the ability to tell one thing from another. They are spread deliberately
 wide, because syntax collapses into mush if every hue sits in the same wedge —
 the green and cyan simply lost the mint cast they used to carry.
 
+## Harmonising the palette with the wallpaper
+
+Optional, and off unless you install it.
+
+The surfaces have no colour, so they take the wallpaper's. The terminal palette
+could not: those sixteen hues are fixed, and on the magenta wallpaper green
+directory names sit on a magenta field with nothing making them agree. This is
+the one place "switching wallpaper switches the theme" was only true of the
+chrome.
+
+`palette/harmonize.py` closes that. It is a **rotation, not an extraction** —
+the distinction matters. Palette-from-image tools replace the sixteen colours
+with whatever the picture contains, which loses both properties the palette
+exists for: `git diff` needs deletions red and additions green, and the sixteen
+need to stay far enough apart that syntax does not collapse. Instead every
+colour keeps its own hue and is pulled at most 12° toward the wallpaper's, in
+OKLCh, with lightness and chroma held exactly.
+
+Two things follow by construction rather than by measurement:
+
+- **Contrast cannot change.** Contrast is a function of lightness; lightness is
+  what is held. Measured drift across all six wallpapers: 0.12 on ratios that
+  run 5:1 to 15:1.
+- **No colour crosses into another's name.** 12° is not a taste call — the
+  palette's tightest pair is blue and cyan at 26° apart, and the bound comes
+  from sweeping every wallpaper to find where the wheel starts folding. At 30°
+  red lands on orange; at 20° yellow starts reading as olive.
+
+`palette/test_harmonize.py` asserts both against every shipped wallpaper, so
+raising the bound cannot quietly ruin one wallpaper while looking fine on
+another.
+
+The effect is meant to be felt rather than noticed. On the magenta wallpaper
+green moves 147° → 135° and cyan 203° → 215° — still plainly green, still
+plainly cyan, but now lit from the same direction as everything else.
+
+### Installing it
+
+Needs `imagemagick`, which Omarchy already has.
+
+```bash
+cd ~/.config/omarchy/themes/liquid-glass
+mkdir -p ~/.local/bin ~/.config/systemd/user
+ln -snf "$PWD/palette/liquid-glass-harmonize" ~/.local/bin/liquid-glass-harmonize
+cp palette/liquid-glass-harmonize.{path,service} ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now liquid-glass-harmonize.path
+```
+
+Symlinked rather than copied so `git pull` updates it. `omarchy theme bg next`
+now retunes the palette as it changes the wallpaper.
+
+There is no Omarchy hook for a background change — `omarchy-theme-bg-next` only
+swaps a symlink and restarts `swaybg` — so this watches the directory that
+symlink lives in. Watching the symlink itself would not work: `ln -nsf`
+replaces it, and an inotify watch dies with the thing it was watching.
+
+It writes into `~/.config/omarchy/current/theme/`, never into the repo, and
+refuses to run unless that theme is this one — otherwise cycling wallpapers
+under another theme would overwrite that theme's terminal configs. A theme
+switch wipes the generated files and the watcher regenerates them, so the two
+cannot drift.
+
+To turn it off:
+
+```bash
+systemctl --user disable --now liquid-glass-harmonize.path
+omarchy theme set "Liquid Glass"
+```
+
+The second line restores the shipped palette.
+
 ## How the glass is built
 
 The target is clear, lit glass — not frost. Those are opposite settings, and
@@ -274,6 +346,7 @@ to trade that for lower GPU load.
 | `neovim.lua` | aether.nvim fed this exact palette, transparent background |
 | `hyprlock.conf` | translucent lock field over the blurred wallpaper |
 | `gtk.css` | translucent GTK4 window backgrounds — **install by hand**, see below |
+| `palette/` | optional: retune the ANSI palette to the wallpaper's hue on every change |
 | `icons/` | hueless glass folder icons — **install by hand**, see `icons/README.md` |
 | `backgrounds/` | six wallpapers |
 

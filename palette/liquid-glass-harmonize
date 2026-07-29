@@ -1,0 +1,46 @@
+#!/bin/bash
+#
+# Regenerate the terminal palette from whatever wallpaper is currently up, and
+# reload the terminals so it takes effect without reopening them.
+#
+# Run by liquid-glass-harmonize.path whenever the background symlink is
+# swapped. Safe to run by hand at any time.
+
+set -euo pipefail
+
+CURRENT="$HOME/.config/omarchy/current"
+THEME_DIR="$CURRENT/theme"
+WALLPAPER="$CURRENT/background"
+HARMONIZE="$(dirname "$(readlink -f "$0")")/harmonize.py"
+
+# Only ever touch our own theme. current/theme is shared: it holds whichever
+# theme is active, and omarchy-theme-set rebuilds it from scratch on every
+# switch. Without this guard, cycling the wallpaper under Tokyo Night would
+# overwrite Tokyo Night's terminal configs with this theme's palette.
+THEME_NAME="$(cat "$CURRENT/theme.name" 2>/dev/null || true)"
+if [[ $THEME_NAME != "liquid-glass" ]]; then
+  exit 0
+fi
+
+[[ -e $WALLPAPER ]] || exit 0
+command -v magick >/dev/null || { echo "harmonize: imagemagick not installed" >&2; exit 1; }
+
+python3 "$HARMONIZE" "$(readlink -f "$WALLPAPER")" --out "$THEME_DIR"
+
+# Alacritty reloads on its own when the file it imports is touched; kitty and
+# ghostty need a signal. That is exactly what omarchy-restart-terminal does, so
+# defer to it rather than keeping a second copy of the knowledge.
+#
+# Resolved explicitly rather than left to PATH. Under systemd the user
+# manager's PATH is whatever the graphical session happened to export, which
+# does include Omarchy's bin today — but a `|| true` on a command that is not
+# found is indistinguishable from success, and the failure mode is silent and
+# confusing: the palette regenerates and no terminal ever picks it up.
+RESTART="$(command -v omarchy-restart-terminal || true)"
+[[ -x $RESTART ]] || RESTART="$HOME/.local/share/omarchy/bin/omarchy-restart-terminal"
+
+if [[ -x $RESTART ]]; then
+  "$RESTART"
+else
+  echo "harmonize: omarchy-restart-terminal not found; palette written but not reloaded" >&2
+fi
