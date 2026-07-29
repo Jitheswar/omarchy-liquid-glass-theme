@@ -38,6 +38,23 @@ window:not(.liquid-glass-never) {
     inset 0 1px 0 rgba(240, 252, 248, 0.34),
     /* glass-shade */
     inset 0 -1px 0 rgba(0, 0, 0, 0.29);
+
+  /* elev-1 is the level this surface wants and it cannot have it. An outer
+     box-shadow needs somewhere to draw, and a layer surface is sized to its
+     content: there is no room outside the window and GTK ignores margin on a
+     layer-shell toplevel, so the shadow is clipped away entirely.
+
+     The bar gets away with elev-1 only because it paints on `> box` inside a
+     38px surface with a 4px margin — the shadow has 4px of surface to bleed
+     into before it clips (of the ~13px it wants). There is no equivalent
+     child to paint on here without moving the rim and gradient off `window`,
+     which would change the OSD's geometry rather than its elevation.
+
+     Measured, rather than assumed: adding `0 3px 10px rgba(0,0,0,.40)` here
+     changes nothing at all outside the surface (0.00/255 across every row
+     below it) and darkens the pane's lower interior by up to 0.36/255, since
+     the shadow lands *behind* a translucent surface and shows through it.
+     That is an artifact, not an elevation, so the declaration is left out. */
 }
 
 progressbar:not(.liquid-glass-never) {

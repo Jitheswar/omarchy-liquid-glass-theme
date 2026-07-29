@@ -70,6 +70,35 @@
 # so the shell surfaces approximate it and stop there. That gap is a platform
 # ceiling, not a defect — in particular, don't "fix" it by lowering
 # rounding_power to make windows match the panels.
+#
+# ── Elevation scale ───────────────────────────────────────────────────────
+# Outer drop shadows only. The inset highlight/shade pair is the *bevel* and
+# belongs to the material, not to this scale — it does not change with height.
+#
+#   elev-1   0 3px 10px  rgba(0, 0, 0, 0.40)   bar        (OSD: see below)
+#   elev-2   0 6px 18px  rgba(0, 0, 0, 0.45)   tooltip    (notification: below)
+#   elev-3   0 12px 40px rgba(0, 0, 0, 0.50)   launcher
+#
+# Height is the surface's claim on your attention: the bar is always there,
+# the launcher covers what you were doing. Offset, blur and opacity all rise
+# together, because a thing further from the wall casts a shadow that is
+# lower, softer and darker all at once — moving one without the others is
+# what makes a shadow read as painted on.
+#
+# Two of the five surfaces cannot reach their level, both for the same
+# underlying reason — an outer shadow needs room outside the box, and a layer
+# surface is sized to its content:
+#
+#   OSD           no room and no inner child to paint on. Measured: the
+#                 shadow renders nowhere outside and only bleeds through the
+#                 translucent pane. Left out. See swayosd.css.
+#   notification  mako has no shadow option at all, and Hyprland's shadow{}
+#                 covers windows, not layer surfaces. See mako.ini.
+#
+# Even the bar only gets part of elev-1: it paints on `> box` inside a 38px
+# surface with a 4px margin, so 4px of the shadow's ~13px reach survives and
+# the rest clips. The scale is what these surfaces aim at, not a promise that
+# every one of them lands it.
 
 accent               = "#6BCCA9"
 cursor               = "#A8E4D3"

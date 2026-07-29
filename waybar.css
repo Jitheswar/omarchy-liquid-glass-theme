@@ -70,6 +70,7 @@ window#waybar > box {
     inset 0 1px 0 rgba(240, 252, 248, 0.34),
     /* glass-shade */
     inset 0 -1px 0 rgba(0, 0, 0, 0.29),
+    /* elev-1 — bar */
     0 3px 10px rgba(0, 0, 0, 0.40);
 }
 
@@ -149,6 +150,7 @@ tooltip {
   box-shadow:
     /* glass-specular */
     inset 0 1px 0 rgba(240, 252, 248, 0.34),
+    /* elev-2 — tooltip */
     0 6px 18px rgba(0, 0, 0, 0.45);
 }
 
