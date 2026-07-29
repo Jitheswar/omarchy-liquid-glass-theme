@@ -24,26 +24,27 @@ deletion. Those are readings, not decoration.
 
 ## Requirements
 
-**Hyprland 0.56.0 or newer.** Four things set that floor, and all of them fail
+**Hyprland 0.56.0 or newer.** Five things set that floor, and all of them fail
 loudly rather than degrading, so it is worth checking before installing:
 
 | Feature | Needs | Why |
 |---|---|---|
 | `decoration:rounding_power = 4.5` | 0.47.0 | squircle corners — added as "supercircular window corners" ([#8943](https://github.com/hyprwm/Hyprland/pull/8943)) |
 | `windowrule`/`layerrule … match:…` | 0.53.0 | the rule syntax was rewritten and the old comma form removed ([#12269](https://github.com/hyprwm/Hyprland/pull/12269)) |
-| `decoration:glow` with a gradient | 0.56.0 | the inner rim — glow gained gradients and angles ([#15208](https://github.com/hyprwm/Hyprland/pull/15208)) |
+| `decoration:glow` | 0.55.0 | the inner rim itself — "add glow decoration" ([#13862](https://github.com/hyprwm/Hyprland/pull/13862)) |
+| …with a gradient | 0.56.0 | the rim is lit from one direction, which needs the gradient form ([#15208](https://github.com/hyprwm/Hyprland/pull/15208)) |
 | `decoration:shadow` with a gradient | 0.56.0 | same, for shadows ([#14809](https://github.com/hyprwm/Hyprland/pull/14809)) |
 | `decoration:motion_blur` | 0.56.0 | added as "a motion blur option to windows" ([#14911](https://github.com/hyprwm/Hyprland/pull/14911)) |
 
-0.56.0 is the binding one. Below it the glow and motion-blur blocks are
-unknown options, and below 0.53.0 every `windowrule` and `layerrule` is a
-config error too — which means no blur on the bar, launcher, notifications or
-OSD, and no window transparency. The theme would load as a palette and nothing
-else. Check with `hyprctl version`.
+0.56.0 is the binding one. On 0.55 the glow block loads but its gradient does
+not, and `motion_blur` is unknown; below 0.53.0 every `windowrule` and
+`layerrule` is a config error too — which means no blur on the bar, launcher,
+notifications or OSD, and no window transparency. The theme would load as a
+palette and nothing else. Check with `hyprctl version`.
 
-Omarchy 3.x ships 0.56.0, so if the theme installs through
-`omarchy theme install` you are already fine. Developed and verified against
-Hyprland 0.56.0 / Omarchy 3.8.4.
+Recent Omarchy 3.x ships 0.56.0. Earlier 3.x releases do not, so the version
+of Omarchy is not on its own the thing to check — `hyprctl version` is.
+Developed and verified against Hyprland 0.56.0 / Omarchy 3.8.4.
 
 Nothing else is required. No plugin, no patched compositor, no `hyprpm`, no
 package outside what Omarchy already installs — clone it, set it, and every
@@ -71,6 +72,17 @@ under rather than a happy accident, and the section on what it costs is
   has a median of 14.6:1, against 14.9:1 for the same colours fully opaque.
   Terminals only make the *background* translucent, so the glyphs never
   thin out. All four terminal configs are untouched by any of the above.
+- **The inner rim.** Swept and measured on a throwaway virtual output, so no
+  part of a real session is in any of the figures: falloff profile at four
+  range/power pairs, active against inactive, and the fullscreen exemption
+  forced with an opaque colour to make its absence unambiguous. The numbers
+  are in `hyprland.conf` beside the settings they justify.
+- **Not verified: motion blur.** It is a function of per-frame displacement,
+  so a screenshot caught mid-animation misses it and slowing the animation
+  down far enough to catch one removes the displacement being rendered. Both
+  were tried. What is verified is that it loads, that it engages only during
+  a move or resize, and that it costs nothing at rest — not what the smear
+  looks like. One line in [Tuning](#tuning) turns it off.
 
 ## Install
 
@@ -562,9 +574,14 @@ decoration:motion_blur:samples = 7     # from 12 — Hyprland's default, cheaper
 
 There is no per-window escape hatch for the rim. `no_blur`, `no_shadow` and
 `no_dim` all exist as window rules; `no_glow` does not. So a *windowed* video
-player gets a faint white edge inside its frame and no rule can exempt it —
-fullscreen is exempt anyway, because the compositor drops decorations there,
-which covers the case where it would actually bother you.
+player gets a faint white edge inside its frame and no rule can exempt it.
+
+Fullscreen is exempt, which covers the case where it would actually bother
+you, and that was checked rather than assumed — with the glow forced to opaque
+red at range 40, a fullscreen window reads 12.5 mean red at its top edge and
+11.8 thirteen pixels in — flat, and that is the terminal's own content with no
+red in it anywhere. A windowed one reads 213.8 falling to 94.9 over the same
+distance.
 
 ### Blur on the lock screen
 
