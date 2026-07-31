@@ -13,7 +13,21 @@
 # bar: colour is held back until something has news.
 
 # Main background, empty for terminal default, need to be empty if you want transparent background
-theme[main_bg]="#000000"
+#
+# Empty, and it is the whole reason btop stopped being a black slab in the
+# middle of the desktop. btop is the only TUI Omarchy ships that paints its own
+# background: impala, bluetui, wiremix and fastfetch all just draw text and let
+# the terminal's alpha through, so they sit on the wallpaper like every other
+# surface. btop with a hex here punched an opaque rectangle through the effect —
+# the same failure neovim.lua heads off with `transparent = true`, and the same
+# note is written there. The decision had already been made once for the
+# editor; this file had not caught up.
+#
+# Nothing else in this file needs to change for it. The meters, the selected
+# row and the box outlines all carry their own colours and read fine over a
+# translucent backing, because a terminal only makes the *background*
+# translucent and leaves glyphs fully opaque.
+theme[main_bg]=""
 
 # Main text color
 theme[main_fg]="#E0E0E0"
