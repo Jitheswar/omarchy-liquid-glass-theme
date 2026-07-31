@@ -213,6 +213,29 @@ The effect is meant to be felt rather than noticed. On the magenta wallpaper
 green moves 147° → 135° and cyan 203° → 215° — still plainly green, still
 plainly cyan, but now lit from the same direction as everything else.
 
+### The text itself
+
+Rotating the sixteen was aimed at the wrong text. Those are the hues `ls` and a
+syntax highlighter reach for; almost everything else on a terminal screen is
+drawn in `foreground`, and that stayed a flat neutral grey sitting on a
+wallpaper-lit pane. A 12° rotation on colours that make up a fraction of the
+screen was never going to make a terminal read as part of the desktop.
+
+So the foreground takes the wallpaper's hue too, at a fixed low chroma with its
+lightness held exactly — `TEXT_CHROMA` in `harmonize.py`. On the magenta
+wallpaper `#E0E0E0` becomes `#EBDCDF`.
+
+This is the cheapest tint in the file, and the reason is worth stating: **a
+neutral has no name to cross into.** The entire 12° bound above exists because
+green can stop looking green and that costs a reading. Off-white cannot stop
+looking off-white, so the only thing worth protecting is contrast — and holding
+lightness protects it by construction. Measured 14.998 before, 14.93 after, on
+a scale where that difference is quantisation.
+
+It is the one neutral that moves. Background, cursor, accent, the selection
+pair and the ANSI greys stay hueless; they are the glass, and glass has no
+colour of its own. `test_harmonize.py` asserts both halves of that.
+
 ### What it covers
 
 | | |

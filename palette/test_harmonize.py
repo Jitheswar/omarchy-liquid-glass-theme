@@ -116,6 +116,21 @@ def main():
             failures.append(f"{name}: browser seed {H.hex_of(seed)} sits at lightness "
                             f"{seed_L:.3f}, against {neutral_L:.3f} for every other surface")
 
+        # The foreground is the one neutral that takes a hue, and the only
+        # thing protecting it is that lightness is held: every contrast figure
+        # in the theme was measured against #E0E0E0's lightness, so a tint that
+        # also lightened or darkened would silently invalidate all of them.
+        tinted = H.text_neutrals(target)["foreground"]
+        base_fg = H.parse_hex(H.NEUTRALS["foreground"])
+        fg_dc = abs(contrast(H.parse_hex(tinted), bg) - contrast(base_fg, bg))
+        if fg_dc > MAX_CONTRAST_DRIFT:
+            failures.append(f"{name}: foreground tint moved contrast by {fg_dc:.2f}, "
+                            f"so lightness was not held")
+        fg_C = H.to_lch(H.parse_hex(tinted))[1]
+        if fg_C > H.TEXT_CHROMA + 0.002:
+            failures.append(f"{name}: foreground reached chroma {fg_C:.4f}, past "
+                            f"TEXT_CHROMA {H.TEXT_CHROMA} — that is a colour, not a cast")
+
         # Substituting into neovim.lua must not touch anything but the hexes we
         # know the meaning of, and must leave a file Lua can still parse.
         generated = H.write_neovim(palette, H.NEUTRALS, name, target)
@@ -134,7 +149,8 @@ def main():
             print("FAIL:", f)
         return 1
     print(f"OK — {len(backgrounds)} wallpapers: no hue moved past {H.MAX_SHIFT} deg, "
-          f"none collapsed below {MIN_SEPARATION} deg, contrast held, greys untouched")
+          f"none collapsed below {MIN_SEPARATION} deg, contrast held, greys untouched, "
+          f"foreground tinted at chroma {H.TEXT_CHROMA} without moving lightness")
     return 0
 
 

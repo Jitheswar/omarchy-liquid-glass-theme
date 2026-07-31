@@ -26,8 +26,11 @@ The effect is meant to be felt rather than noticed. It is a cast, not a
 recolour: on the magenta wallpaper the greens warm slightly and the blues cool
 slightly, and `ls` still paints a directory in something you would call green.
 
-Neutrals are not touched at all. Background, foreground, cursor, accent and the
-greys stay hueless — they are the glass, and glass has no colour.
+One neutral is touched, and it is the one you spend all day reading. The
+terminal's foreground takes the wallpaper's hue at a fixed low chroma, holding
+its lightness exactly — see TEXT_CHROMA. Everything else stays hueless:
+background, cursor, accent, the selection pair and the ANSI greys are the
+glass, and glass has no colour.
 
 Usage:
     harmonize.py <wallpaper.png> --out <dir>     write the palette files
@@ -247,6 +250,29 @@ ALPHA = "0.74"
 # exposes no transparency, so a neutral seed there is simply grey.
 CHROME_CHROMA = 0.0122
 
+# Chroma for the terminal's foreground text, in OKLCh.
+#
+# The sixteen ANSI slots can only be pulled MAX_SHIFT degrees before `git diff`
+# deletions stop being red, so hue rotation alone can never make a terminal
+# read as part of the desktop — and it was aimed at the wrong text anyway. The
+# hues are what `ls` and a syntax highlighter use. Everything else on the
+# screen, which is most of what is on the screen, is drawn in `foreground`, and
+# that was a flat neutral grey sitting on a wallpaper-lit pane.
+#
+# So this tints the one colour that carries the bulk of the text, and it is the
+# cheapest tint in the file: a neutral has no name to cross into. Green can
+# stop looking green and that costs a reading; off-white cannot stop looking
+# off-white. Lightness is held exactly, so contrast against the background is
+# unchanged by construction — measured at 14.998 before and 14.93 after, on a
+# scale where the drift is quantisation.
+#
+# Higher than CHROME_CHROMA above, and deliberately. That number is a *seed*:
+# Chromium expands it into a whole Material You chrome and amplifies it hard,
+# so a small value arrives loud. Text is not amplified — what is set here is
+# what lands on the glass — so matching the browser's number would have made
+# the terminal the quieter of the two.
+TEXT_CHROMA = 0.018
+
 
 def derive(wallpaper):
     target = dominant_hue(wallpaper)
@@ -268,6 +294,19 @@ def chrome_seed(target):
     if target is None:
         return parse_hex(NEUTRALS["background"])
     return from_lch(L, CHROME_CHROMA, target)
+
+
+def text_neutrals(target):
+    """NEUTRALS with the terminal's foreground carrying the wallpaper's hue.
+
+    Only `foreground` moves, and only in chroma — its lightness is the value
+    every contrast figure in the theme was measured against, so it is held
+    exactly. A grey wallpaper leaves the whole dict untouched.
+    """
+    if target is None:
+        return dict(NEUTRALS)
+    L, _, _ = to_lch(parse_hex(NEUTRALS["foreground"]))
+    return dict(NEUTRALS, foreground=hex_of(from_lch(L, TEXT_CHROMA, target)))
 
 
 # ── Writers ───────────────────────────────────────────────────────────────
@@ -440,6 +479,11 @@ def main(argv):
             else:
                 _, _, h2 = to_lch(parse_hex(moved))
                 print(f"  {k:8} {v} -> {moved}   hue {h:5.1f} -> {h2:5.1f}")
+        fg = text_neutrals(target)["foreground"]
+        if fg == NEUTRALS["foreground"]:
+            print(f"  {'text':8} {NEUTRALS['foreground']}            neutral, untouched")
+        else:
+            print(f"  {'text':8} {NEUTRALS['foreground']} -> {fg}   chroma 0 -> {TEXT_CHROMA}")
         return 0
 
     if "--out" not in argv:
@@ -448,7 +492,7 @@ def main(argv):
     out = argv[argv.index("--out") + 1]
     for name, writer in WRITERS.items():
         with open(os.path.join(out, name), "w") as f:
-            f.write(writer(palette, NEUTRALS, os.path.basename(wallpaper), target))
+            f.write(writer(palette, text_neutrals(target), os.path.basename(wallpaper), target))
     print(f"harmonized {len(WRITERS)} files to hue "
           f"{'none (grey wallpaper)' if target is None else f'{target:.0f}'} in {out}")
     return 0
