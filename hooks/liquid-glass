@@ -8,17 +8,17 @@
 # "you are being switched to" and "you are being switched away from".
 #
 # Most of the theme needs neither. omarchy-theme-set rebuilds current/theme
-# from scratch and re-runs its own setters, the gtk.css shim is an @import that
-# silently no-ops once no theme ships one, and the icon setting falls back to
+# from scratch and re-runs its own setters, and the icon setting falls back to
 # Yaru-blue. Those revert themselves.
 #
-# Two things do not, because they live in files Omarchy owns rather than in the
-# theme: hyprlock's corner rounding, and fastfetch's key colours. Left to
-# themselves they follow you to the next theme — a rounded lock field and a
-# terminal-foreground logo under a theme that asked for neither. This hook is
-# what makes them behave like the rest of the theme.
+# Four things do not, because they live in files the *user* owns rather than in
+# the theme: the GTK4 and GTK3 stylesheets, hyprlock's corner rounding, and
+# fastfetch's key colours. Left to themselves they follow you to the next theme
+# — a rounded lock field and a terminal-foreground logo under a theme that
+# asked for neither. This hook is what makes them behave like the rest of the
+# theme.
 #
-# Two rules it will not break:
+# Three rules it will not break:
 #
 #   1. Never guess. Reverting fastfetch's colours by mapping "default" back to
 #      green/blue/magenta would be lossy — the original file used three
@@ -28,6 +28,11 @@
 #   2. Never touch what is not ours. If a file no longer looks like something
 #      this hook applied, it is left exactly as it is. Someone editing their
 #      own hyprlock rounding should not have it reset by a theme switch.
+#   3. Add, do not replace. Where the theme needs something in a file the user
+#      owns, it adds the smallest thing that works — one `@import` line, one
+#      key inside one named block — and takes exactly that back out again. No
+#      file the user wrote is ever overwritten, and no backup-and-restore dance
+#      is needed for a change that never destroyed anything in the first place.
 
 set -euo pipefail
 
@@ -40,36 +45,95 @@ OUR_ROUNDING=22
 
 THEME_DIR="$HOME/.config/omarchy/themes/liquid-glass"
 ICON_DIR="$HOME/.local/share/icons/LiquidGlass"
+
+# Two toolkits, two stylesheets, same mechanism. The relative path is resolved
+# against the directory the file sits in, so `../omarchy/...` reaches
+# ~/.config/omarchy from either ~/.config/gtk-4.0 or ~/.config/gtk-3.0.
 GTK4_CSS="$HOME/.config/gtk-4.0/gtk.css"
-SHIM='@import url("../omarchy/current/theme/gtk.css");'
+GTK3_CSS="$HOME/.config/gtk-3.0/gtk.css"
+SHIM4='@import url("../omarchy/current/theme/gtk.css");'
+SHIM3='@import url("../omarchy/current/theme/gtk3.css");'
 
 mkdir -p "$STATE"
 
-# ── Assets ────────────────────────────────────────────────────────────────
-# The gtk.css shim and the folder icons are re-asserted here on every switch
-# *to* this theme rather than written once by the installer, so that after the
-# single bootstrap nothing else ever has to be run by hand. A `git pull` that
-# brings new icons lands the next time the theme is set; a shim removed by an
-# Omarchy update comes back the same way.
+# ── The GTK shims ─────────────────────────────────────────────────────────
+# ~/.config/gtk-4.0/gtk.css and ~/.config/gtk-3.0/gtk.css are the user's files,
+# not Omarchy's and not this theme's, and that is the whole design constraint
+# here. This used to overwrite the GTK4 one — it took a timestamped copy first
+# and ./uninstall could put it back, so nothing was strictly *lost*, but a
+# theme that replaces a config file and hands you a backup has still replaced
+# your config file. Someone with their own GTK tweaks in there had them stop
+# working the moment they tried this theme, and got them back only by knowing
+# ./uninstall existed and running it.
 #
-# Neither is ever removed by this hook, on purpose. The shim is an @import that
-# silently no-ops once no theme ships a gtk.css, and the icon directory is
-# unreferenced the moment gsettings points elsewhere — so both are already
-# inert, and leaving them makes switching back instant. ./uninstall removes
-# them; see the note further down about why this hook does not.
+# So it adds a line instead. One `@import`, prepended, everything else left
+# exactly as it was; and taken back out again when you switch away, so the
+# theme's entire footprint in a file you own is one line that is only there
+# while the theme is.
+#
+# Prepended rather than appended because CSS requires @import to precede every
+# other rule and GTK's parser enforces it — an import after a declaration is
+# dropped, with the failure showing up as "the theme silently does nothing" for
+# anyone whose stylesheet was not empty.
+#
+# grep -qxF, not grep -qF: an exact whole-line match. A substring match would
+# see the line inside a comment, and a user who had commented ours out would
+# find it never came back.
+add_import() {
+  local file=$1 line=$2 tmp
+  mkdir -p "$(dirname "$file")"
+
+  if [[ ! -f $file ]]; then
+    printf '%s\n' "$line" >"$file"
+    return 0
+  fi
+
+  grep -qxF "$line" "$file" && return 0
+
+  # Written aside and moved into place rather than edited in situ: under
+  # `set -e` a failure part-way through a redirect that has already truncated
+  # the target would leave the user with an empty stylesheet.
+  tmp="$file.liquid-glass.$$"
+  { printf '%s\n' "$line"; cat "$file"; } >"$tmp"
+  mv "$tmp" "$file"
+}
+
+# The inverse, and it is deliberately narrow: it deletes one exact line and
+# nothing else. If the file is empty afterwards then the line was all there
+# ever was — ours, in a file we created — so the file goes too. If anything
+# remains, it is the user's, and it is left untouched.
+remove_import() {
+  local file=$1 line=$2 tmp
+  [[ -f $file ]] || return 0
+  grep -qxF "$line" "$file" || return 0
+
+  tmp="$file.liquid-glass.$$"
+  grep -vxF "$line" "$file" >"$tmp" || true
+  if [[ -s $tmp ]]; then
+    mv "$tmp" "$file"
+  else
+    rm -f "$tmp" "$file"
+  fi
+}
+
+# ── Assets ────────────────────────────────────────────────────────────────
+# The shims and the folder icons are re-asserted here on every switch *to* this
+# theme rather than written once by the installer, so that after the single
+# bootstrap nothing else ever has to be run by hand. A `git pull` that brings
+# new icons lands the next time the theme is set; a shim removed by an Omarchy
+# update comes back the same way.
+#
+# The icon directory, unlike the shims, is *not* removed on the way out. The
+# distinction is whose file it is: ~/.local/share/icons/LiquidGlass is ours
+# alone and is inert the moment gsettings points elsewhere, so leaving it costs
+# the user nothing and makes switching back instant. A line inside their own
+# stylesheet is a different thing, and it goes.
 
 apply_assets() {
   [[ -d $THEME_DIR ]] || return 0
 
-  mkdir -p "$(dirname "$GTK4_CSS")"
-  if [[ ! -f $GTK4_CSS ]] || ! grep -qF 'omarchy/current/theme/gtk.css' "$GTK4_CSS"; then
-    # Anything already there that is not our shim is someone's own file. Keep a
-    # copy before replacing it; ./uninstall puts it back.
-    if [[ -f $GTK4_CSS ]]; then
-      cp "$GTK4_CSS" "$GTK4_CSS.before-liquid-glass.$(date +%s)"
-    fi
-    printf '%s\n' "$SHIM" >"$GTK4_CSS"
-  fi
+  add_import "$GTK4_CSS" "$SHIM4"
+  [[ -f $THEME_DIR/gtk3.css ]] && add_import "$GTK3_CSS" "$SHIM3"
 
   # Only re-copy when the source is actually newer than what is installed, so
   # a theme switch does not rebuild the icon cache every time for nothing.
@@ -97,19 +161,47 @@ apply_assets() {
 # radius-lg, the step the OSD uses; the field is 650x100, the same order of
 # size. Omarchy ships rounding = 0 inside its own input-field block, which a
 # theme may not override — see the long note at the top of hyprlock.conf.
+#
+# Everything below is scoped to that one block, and it did not used to be. The
+# match and the substitution were both unanchored, so `rounding = 0` anywhere
+# in the file was rewritten. On a stock hyprlock.conf there is exactly one such
+# line and it is the right one, which is why this went unnoticed — but
+# `rounding` is also a valid key in hyprlock's `image` and `shape` blocks, so
+# anyone who had added a square avatar or a square panel of their own had it
+# quietly rounded off by a theme switch, and un-rounded again by the next one.
+#
+# A theme reaching into a user's config file at all is a thing to do narrowly
+# or not at all. This is the narrow version: one key, in one named block.
+
+# The value of `rounding` inside the input-field block, or nothing. Prints one
+# line per match, so a file with two input-field blocks yields two lines and
+# every comparison below fails — which is the wanted behaviour. An ambiguous
+# file is one to leave alone, not one to guess at.
+field_rounding() {
+  sed -n -E '/^[[:space:]]*input-field[[:space:]]*[{]/,/^[[:space:]]*[}]/ {
+    s/^[[:space:]]*rounding[[:space:]]*=[[:space:]]*([0-9]+)[[:space:]]*$/\1/p
+  }' "$1"
+}
+
+set_field_rounding() {
+  local file=$1 from=$2 to=$3
+  sed -i -E "/^[[:space:]]*input-field[[:space:]]*[{]/,/^[[:space:]]*[}]/ {
+    s/^([[:space:]]*rounding[[:space:]]*=[[:space:]]*)$from[[:space:]]*\$/\\1$to/
+  }" "$file"
+}
 
 apply_hyprlock() {
   [[ -f $HYPRLOCK ]] || return 0
-  grep -qE '^\s*rounding\s*=\s*0\s*$' "$HYPRLOCK" || return 0
+  [[ $(field_rounding "$HYPRLOCK") == "0" ]] || return 0
   cp "$HYPRLOCK" "$STATE/hyprlock.conf.orig"
-  sed -i -E "s/^(\s*rounding\s*=\s*)0\s*$/\1$OUR_ROUNDING/" "$HYPRLOCK"
+  set_field_rounding "$HYPRLOCK" 0 "$OUR_ROUNDING"
 }
 
 revert_hyprlock() {
   [[ -f $HYPRLOCK ]] || return 0
   # Only ours if it is still exactly the value we wrote.
-  grep -qE "^\s*rounding\s*=\s*$OUR_ROUNDING\s*$" "$HYPRLOCK" || return 0
-  sed -i -E "s/^(\s*rounding\s*=\s*)$OUR_ROUNDING\s*$/\10/" "$HYPRLOCK"
+  [[ $(field_rounding "$HYPRLOCK") == "$OUR_ROUNDING" ]] || return 0
+  set_field_rounding "$HYPRLOCK" "$OUR_ROUNDING" 0
   rm -f "$STATE/hyprlock.conf.orig"
 }
 
@@ -156,8 +248,8 @@ revert_fastfetch() {
 # that is cheap and re-appliable, and it does not get to delete files the user
 # installed. The config revert above already runs whether the directory is
 # there or not, so deleting the theme still un-applies it — which was the point.
-# What is left behind afterwards is inert: the shim is an @import that resolves
-# to nothing, the icon directory is unreferenced once gsettings moves on, and
+# What is left behind afterwards is inert: the shims are removed by the same
+# revert path, the icon directory is unreferenced once gsettings moves on, and
 # this hook exits immediately unless the theme is active.
 #
 # ./uninstall removes those, and it is the right place for it, because it is
@@ -168,11 +260,17 @@ note_if_absent() {
   return 0
 }
 
+revert_assets() {
+  remove_import "$GTK4_CSS" "$SHIM4"
+  remove_import "$GTK3_CSS" "$SHIM3"
+}
+
 if [[ $THEME == "liquid-glass" ]]; then
   apply_assets
   apply_hyprlock
   apply_fastfetch
 else
+  revert_assets
   revert_hyprlock
   revert_fastfetch
   note_if_absent

@@ -1,0 +1,121 @@
+#!/bin/bash
+#
+# Liquid Glass — tests for hooks/liquid-glass.
+#
+# Run it from anywhere: ./hooks/test-liquid-glass
+#
+# The hook is the one part of this theme that writes into files the user owns,
+# so it is the one part where a bug is not a wrong colour but a lost config.
+# Every case below is a property that has to hold rather than an implementation
+# detail: your own gtk.css comes back byte-for-byte, the hyprlock edit stays
+# inside the block it is aimed at, and anything ambiguous is left alone.
+#
+# Cases 1, 4 and 6 are regressions. The shim used to overwrite gtk.css outright,
+# and the hyprlock substitution used to be unanchored — it rewrote `rounding = 0`
+# anywhere in the file, including the image and shape blocks a user might have
+# added.
+#
+# Runs entirely inside a temporary HOME. Nothing real is touched.
+
+set -u
+
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SANDBOX=$(mktemp -d)
+trap 'rm -rf "$SANDBOX"' EXIT
+
+fail=0
+ok()   { printf '  \033[32mok\033[0m   %s\n' "$1"; }
+bad()  { printf '  \033[31mFAIL\033[0m %s\n' "$1"; fail=1; }
+check(){ [[ $2 == "$3" ]] && ok "$1" || { bad "$1"; printf '        want: %q\n        got:  %q\n' "$3" "$2"; }; }
+
+setup() {
+  H="$SANDBOX/h$1"; rm -rf "$H"
+  mkdir -p "$H/.config/omarchy/themes" "$H/.config/hypr" "$H/.config/fastfetch" \
+           "$H/.config/gtk-4.0" "$H/.config/gtk-3.0"
+  cp -r "$REPO" "$H/.config/omarchy/themes/liquid-glass"
+}
+run() { HOME="$H" XDG_STATE_HOME="$H/.local/state" bash "$REPO/hooks/liquid-glass" "$1"; }
+
+echo
+echo "1. a user's own gtk.css survives apply and revert"
+setup 1
+cat >"$H/.config/gtk-4.0/gtk.css" <<'EOF'
+/* my own tweaks */
+headerbar { min-height: 32px; }
+EOF
+before=$(cat "$H/.config/gtk-4.0/gtk.css")
+run liquid-glass
+check "import is prepended"      "$(head -1 "$H/.config/gtk-4.0/gtk.css")" '@import url("../omarchy/current/theme/gtk.css");'
+check "user rules still present" "$(tail -n +2 "$H/.config/gtk-4.0/gtk.css")" "$before"
+run some-other-theme
+check "revert restores verbatim" "$(cat "$H/.config/gtk-4.0/gtk.css")" "$before"
+
+echo
+echo "2. gtk3 shim installed alongside, and removed"
+setup 2
+run liquid-glass
+check "gtk3 shim written" "$(cat "$H/.config/gtk-3.0/gtk.css")" '@import url("../omarchy/current/theme/gtk3.css");'
+run some-other-theme
+check "gtk3 file removed (was ours alone)" "$([[ -e $H/.config/gtk-3.0/gtk.css ]] && echo present || echo gone)" "gone"
+
+echo
+echo "3. applying twice does not duplicate the import"
+setup 3
+run liquid-glass; run liquid-glass; run liquid-glass
+check "one import line" "$(grep -c 'omarchy/current/theme/gtk.css' "$H/.config/gtk-4.0/gtk.css")" "1"
+
+echo
+echo "4. hyprlock: only the input-field block is touched"
+setup 4
+cat >"$H/.config/hypr/hyprlock.conf" <<'EOF'
+image {
+    path = ~/.face
+    size = 100
+    rounding = 0
+}
+
+input-field {
+    size = 650, 100
+    rounding = 0
+}
+
+shape {
+    size = 300, 60
+    rounding = 0
+}
+EOF
+run liquid-glass
+check "input-field rounded"  "$(sed -n '/^input-field/,/^}/ s/^ *rounding *= *//p' "$H/.config/hypr/hyprlock.conf")" "22"
+check "image left alone"     "$(sed -n '/^image/,/^}/ s/^ *rounding *= *//p' "$H/.config/hypr/hyprlock.conf")" "0"
+check "shape left alone"     "$(sed -n '/^shape/,/^}/ s/^ *rounding *= *//p' "$H/.config/hypr/hyprlock.conf")" "0"
+run some-other-theme
+check "input-field reverted" "$(sed -n '/^input-field/,/^}/ s/^ *rounding *= *//p' "$H/.config/hypr/hyprlock.conf")" "0"
+
+echo
+echo "5. a hand-set rounding the theme did not write is left alone"
+setup 5
+printf 'input-field {\n    rounding = 8\n}\n' >"$H/.config/hypr/hyprlock.conf"
+run liquid-glass
+check "declines to overwrite" "$(sed -n 's/^ *rounding *= *//p' "$H/.config/hypr/hyprlock.conf")" "8"
+run some-other-theme
+check "declines to revert"    "$(sed -n 's/^ *rounding *= *//p' "$H/.config/hypr/hyprlock.conf")" "8"
+
+echo
+echo "6. two input-field blocks: ambiguous, so nothing is touched"
+setup 6
+printf 'input-field {\n    rounding = 0\n}\ninput-field {\n    rounding = 0\n}\n' >"$H/.config/hypr/hyprlock.conf"
+run liquid-glass
+check "left alone" "$(sed -n 's/^ *rounding *= *//p' "$H/.config/hypr/hyprlock.conf" | tr '\n' ' ')" "0 0 "
+
+echo
+echo "7. commented-out import is not mistaken for ours"
+setup 7
+printf '/* @import url("../omarchy/current/theme/gtk.css"); */\n' >"$H/.config/gtk-4.0/gtk.css"
+run liquid-glass
+check "real import added anyway" "$(grep -cx '@import url("../omarchy/current/theme/gtk.css");' "$H/.config/gtk-4.0/gtk.css")" "1"
+run some-other-theme
+check "comment survives revert"  "$(cat "$H/.config/gtk-4.0/gtk.css")" '/* @import url("../omarchy/current/theme/gtk.css"); */'
+
+echo
+[[ $fail -eq 0 ]] && echo "all passed" || echo "FAILURES"
+exit $fail

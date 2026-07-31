@@ -1,0 +1,84 @@
+/* Liquid Glass — GTK3 applications
+ *
+ * The companion to gtk.css, and it exists because "GTK" is two toolkits on an
+ * Omarchy machine rather than one. gtk.css reaches GTK4; everything still
+ * linking libgtk-3 was untouched by it and went on drawing a solid window in
+ * the middle of a desktop you can see through.
+ *
+ * That is not a long tail. `xdg-desktop-portal-gtk` is GTK3, and it is what
+ * draws every Open and Save dialog for Chromium, for Electron apps, and for
+ * anything else going through the portal — Omarchy cares enough about those
+ * dialogs to float and centre them by hand (default/hypr/apps/system.conf
+ * tags the class as `floating-window`), which is precisely the arrangement
+ * that puts an opaque panel in the middle of the screen with glass on all
+ * four sides of it. Evince, gnome-disks and gcr-viewer are the same story with
+ * less traffic.
+ *
+ * Installed exactly like the GTK4 one: the hook writes an `@import` of this
+ * file into ~/.config/gtk-3.0/gtk.css, so it stops applying by itself the
+ * moment another theme is current and ships no gtk3.css of its own.
+ *
+ * One practical difference from gtk.css worth knowing while editing: GTK4
+ * re-reads its user stylesheet when the file changes, and GTK3 reads it once
+ * at startup. Nothing you change here will appear in an app that is already
+ * open — including the portal, which is a long-lived D-Bus service, so it has
+ * to be restarted rather than merely re-invoked.
+ *
+ * ── Chrome, not content ───────────────────────────────────────────────────
+ *
+ * The two are easy to conflate because GTK3 draws them with overlapping
+ * selectors, and getting it wrong costs more here than in GTK4: a document is
+ * the one thing on screen the user is actually reading, and a wallpaper behind
+ * a page of text is not depth, it is noise.
+ *
+ * So `.view` is not in the list below, and that is the most load-bearing
+ * omission in this file. In GTK3 `.view` is the class on text views, tree
+ * views and icon views. gtk.css can afford to name GTK4's equivalents because
+ * they are narrower there; here it would reach a document surface.
+ *
+ * Checked rather than assumed, on Evince over the shipped wallpaper — mean
+ * RGB (0-255) of the same crop with the shim absent and present:
+ *
+ *                        without          with
+ *     headerbar     42.6 42.6 42.6   14.8 33.0 26.4
+ *     page          238.9 ... ...    238.9 ... ...
+ *
+ * The header goes from flat neutral grey to carrying the wallpaper's green;
+ * the page does not move by a single count, because the paper is a bitmap the
+ * renderer draws over the scrolled window rather than a CSS background. That
+ * is the split this file is aiming for, and it holds.
+ *
+ * headerbar is in the list, and it is the line that separates this file from
+ * being a copy of gtk.css with the selectors renamed. libadwaita draws a GTK4
+ * header transparently over the window's own background, so gtk.css gets it
+ * for free; GTK3's headerbar paints its own background gradient and left alone
+ * it stays a solid bar across the top of a translucent window — which reads as
+ * the window failing to render rather than as a design. `background-image:
+ * none` is what takes the gradient off.
+ *
+ * 0.25 is the same alpha gtk.css uses, and for the same reason: translucent
+ * black rather than `transparent`, so text keeps a surface to sit on when a
+ * dialog lands over a bright window instead of over the wallpaper. If a
+ * particular app reads badly, raising this is the first thing to try. */
+
+window.background,
+headerbar,
+placessidebar,
+placessidebar list,
+.sidebar,
+scrolledwindow,
+viewport,
+notebook > header {
+  background-color: rgba(0, 0, 0, 0.25);
+  background-image: none;
+}
+
+/* The header's bottom edge is a hairline of solid theme colour, and against a
+   translucent bar it is the one element still announcing where the opaque
+   version used to end. Replaced with the glass-shade and glass-specular pair
+   the bar, the OSD and the launcher all use, so the header separates from the
+   body the way every other surface in this theme does. */
+headerbar {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.29);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10);
+}

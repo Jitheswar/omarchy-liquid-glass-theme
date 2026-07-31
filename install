@@ -4,8 +4,9 @@
 #
 # Run this once, ever. It installs one file — a theme-set hook — and then gets
 # out of the way. Everything the theme needs outside its own directory is
-# applied, re-applied and un-applied by that hook from then on: the gtk.css
-# shim, the folder icons, hyprlock's rounding and fastfetch's key colours.
+# applied, re-applied and un-applied by that hook from then on: the GTK4 and
+# GTK3 shims, the folder icons, hyprlock's rounding and fastfetch's key
+# colours.
 #
 # It is one command rather than none because Omarchy runs nothing from a theme
 # directory. `omarchy theme install` clones the repo and calls

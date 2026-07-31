@@ -177,7 +177,6 @@ left translucent.
 | The palette, and every terminal config | `omarchy-theme-set` rebuilds `current/theme` from scratch on each switch |
 | Icon *setting* (`icons.theme`) | `omarchy-theme-set-gnome` re-reads it per theme, falling back to `Yaru-blue` |
 | Browser tint, VSCode, keyboard LEDs | Omarchy re-runs its own setter for each on every switch |
-| `~/.config/gtk-4.0/gtk.css` | an `@import` that silently no-ops once the theme is gone — see above |
 | Bar height | the theme no longer asks for one; it never needed to |
 
 **Left installed, but inert.**
@@ -191,20 +190,31 @@ left translucent.
 
 | File | While active | On switching away |
 |---|---|---|
-| `~/.config/hypr/hyprlock.conf` | `rounding = 22` | back to Omarchy's `0` |
+| `~/.config/gtk-4.0/gtk.css` | one `@import` line, at the top | the line is deleted; the rest of the file is untouched |
+| `~/.config/gtk-3.0/gtk.css` | one `@import` line, at the top | same |
+| `~/.config/hypr/hyprlock.conf` | `rounding = 22`, inside `input-field` only | back to Omarchy's `0` |
 | `~/.config/fastfetch/config.jsonc` | `"default"` ×22 | the original file, verbatim |
 
-These two live in files Omarchy owns rather than in the theme — hyprlock
+These four live in files **you** own rather than in the theme — hyprlock
 because a theme may only substitute variables into Omarchy's shared
-`input-field` block, fastfetch because `config.jsonc` is Omarchy's. They used
-to be manual edits that followed you to the next theme. `hooks/liquid-glass`,
+`input-field` block, fastfetch because `config.jsonc` is Omarchy's, and the two
+stylesheets because Omarchy applies no theme GTK CSS at all. They used to be
+manual edits that followed you to the next theme. `hooks/liquid-glass`,
 installed by `./install` into `~/.config/omarchy/hooks/theme-set.d/`, now
-handles both: Omarchy runs everything in that directory on *every* theme
+handles all four: Omarchy runs everything in that directory on *every* theme
 change and passes the new theme's name, which is the only moment a theme is
 told it is being switched away from.
 
-Two rules it will not break, both of them tested:
+Three rules it will not break, all of them tested — `./hooks/test-liquid-glass`
+runs the lot against a throwaway `HOME`:
 
+- **It adds, it does not replace.** The GTK shim used to overwrite
+  `~/.config/gtk-4.0/gtk.css`. It took a timestamped copy first and
+  `./uninstall` could put it back, so nothing was strictly *lost* — but a theme
+  that replaces your config file and hands you a backup has still replaced your
+  config file, and anyone with their own GTK tweaks in there had them stop
+  working the moment they tried this theme. It prepends one line now, and takes
+  that one line back out. Your file comes back byte-for-byte.
 - **It restores rather than guesses.** Mapping `"default"` back to
   green/blue/magenta is not invertible — three colours went in, one came out —
   so the original is copied aside on the way in and put back byte-for-byte on
@@ -212,7 +222,12 @@ Two rules it will not break, both of them tested:
 - **It will not touch what is not ours.** A `rounding` you set yourself is left
   alone in both directions, and a backup is discarded rather than restored if
   the file stopped looking like the one the hook wrote — so an
-  `omarchy refresh` in between is safe.
+  `omarchy refresh` in between is safe. The hyprlock substitution is scoped to
+  the `input-field` block, too: it used to be unanchored, which rewrote
+  `rounding = 0` anywhere in the file, so a square avatar or panel you had
+  added in an `image` or `shape` block was quietly rounded off by a theme
+  switch. A file with two `input-field` blocks is ambiguous and is left alone
+  entirely rather than guessed at.
 
 ### Removing the theme
 
@@ -229,7 +244,7 @@ very next action — the theme you pick to replace it. hyprlock goes back to
 `rounding = 0` and fastfetch to its original colours, whether or not the theme
 directory is still there.
 
-The **files** — the shim, the icons, the harmoniser units — are left alone, and
+The **files** — the icons, the harmoniser units — are left alone, and
 `./uninstall` is what removes them. That is a deliberate split, and it was
 learned the hard way.
 
@@ -244,9 +259,9 @@ the browser losing its tint, several steps removed from anything they had done.
 The rule that replaced it is general rather than a patch for one race: **a
 heuristic may revert configuration, because that is cheap and re-appliable, and
 may not delete files someone installed.** Deleting the theme still un-applies
-it, which was the point; what stays behind is inert — the shim is an `@import`
-resolving to nothing, the icon directory is unreferenced once gsettings moves
-on, and the hook exits immediately unless the theme is active.
+it, which was the point; what stays behind is inert — the shims come out on the
+same revert path as everything else, the icon directory is unreferenced once
+gsettings moves on, and the hook exits immediately unless the theme is active.
 
 `palette/harmonize.py` still does not patch either file, and that has not
 changed with the hook. The harmoniser runs on *wallpaper* changes, which is the
@@ -287,14 +302,48 @@ back — switching away or deleting the theme already un-applies it.
 
 #### What the hook does
 
-**`gtk.css` — translucent GTK4 windows.** Omarchy applies no theme `gtk.css`
-at all, so GTK gets a two-line file pointing at the theme's:
+**`gtk.css` and `gtk3.css` — translucent GTK windows.** Omarchy applies no
+theme GTK CSS at all, so each toolkit gets one line pointing at the theme's:
 
 ```bash
 printf '@import url("../omarchy/current/theme/gtk.css");\n' > ~/.config/gtk-4.0/gtk.css
+printf '@import url("../omarchy/current/theme/gtk3.css");\n' > ~/.config/gtk-3.0/gtk.css
 ```
 
-Without it the glass folder icons cannot work. They carry no colour and take
+The hook **prepends** those lines rather than writing the files, and deletes
+exactly those lines on the way out, so anything else you keep in either file
+survives untouched. Prepended because CSS requires `@import` before every other
+rule and GTK's parser enforces it — an import placed after a declaration is
+dropped, and the symptom is the theme silently doing nothing for anyone whose
+stylesheet was not already empty.
+
+GTK3 is a separate file because it is a separate toolkit with different node
+names, and it is worth having because it is not a long tail:
+`xdg-desktop-portal-gtk` is GTK3, and it draws every Open and Save dialog for
+Chromium, for Electron apps, and for anything else going through the portal.
+Omarchy floats and centres those dialogs by hand, which is exactly the
+arrangement that puts an opaque panel in the middle of the screen with glass on
+all four sides of it. Evince, gnome-disks and gcr-viewer are the same story
+with less traffic.
+
+`gtk3.css` deliberately styles **chrome and not content** — `.view` is not in
+its selector list, because in GTK3 that class reaches document surfaces.
+Measured on Evince over the shipped wallpaper, mean RGB with the shim absent
+and present:
+
+| | without | with |
+|---|---|---|
+| header bar | 42.6 42.6 42.6 | **14.8 33.0 26.4** |
+| the page | 238.9 … … | 238.9 … … |
+
+The header goes from flat neutral grey to carrying the wallpaper's green; the
+page does not move by a single count. One practical note while editing it: GTK4
+re-reads its user stylesheet when the file changes and **GTK3 reads it once at
+startup**, so nothing you change appears in an app that is already open —
+including the portal, which is a long-lived service and has to be restarted
+rather than merely re-invoked.
+
+Without the GTK4 shim the glass folder icons cannot work. They carry no colour and take
 the colour of whatever is behind them, which inside a file manager is the file
 manager's own opaque background — so they render grey no matter what the
 wallpaper is. Log out and back in, or restart the app.
@@ -629,6 +678,42 @@ around a floating panel doesn't get blurred along with the panel.
 is the layered depth the theme is built around. Turn it on in `hyprland.conf`
 to trade that for lower GPU load.
 
+**Two surfaces blur on their own switch**, and both were opaque here until
+recently because neither inherits `decoration:blur:enabled` — a groupbar is not
+a window and an input method is neither a window nor a layer, so nothing set
+anywhere else in the file reached them.
+
+`group:groupbar:blur` was the easier of the two to miss, because the tab
+colours were *already* alpha values: the config looked translucent and was
+compositing over nothing. Measured over the shipped wallpaper, mean luminance
+(0-255) across 600px of tab at increasing depth below the bar's top edge:
+
+| depth | 2px | 6px | 10px | 14px | 18px |
+|---|---|---|---|---|---|
+| active tab | +1.3 | +5.4 | +8.2 | +9.1 | +11.5 |
+| inactive tab | +2.6 | +4.9 | +4.1 | +2.5 | +1.2 |
+
+The three companion knobs — `rounding`, `rounding_power`,
+`gradient_rounding_power` — are deliberately *not* set beside it. The tab's
+visible shape is drawn by `gradient_rounding`, which was already 10, and
+sweeping the other three changed nothing: `gradient_rounding_power` 2 → 4.5
+differed by 0/255 at every pixel of a 22×22 crop of the corner. They would have
+looked like consistency with `decoration:rounding_power` and done nothing.
+
+`decoration:blur:input_methods` costs nothing on a machine with no IME running
+— there is no surface to blur, so the pass is never scheduled — and it is the
+difference between a candidate list that is glass and one that is the only grey
+box on the screen. It is on by default rather than left to the reader, because
+the people it affects are the least likely to go reading a Hyprland config to
+find out why.
+
+One thing measured and then *not* shipped: `misc:background_color`. It is the
+colour Hyprland paints where no surface is drawn, and on Omarchy there is no
+such place — the wallpaper is a background-layer surface spanning the whole
+output. Forced to pure red, mean red across an empty workspace came back at
+18.3 against 37.6 green, which is the wallpaper and nothing else. A declaration
+that reads as thoroughness and changes no pixel is worse than an absent one.
+
 ## What a plugin would add, and why there isn't one
 
 Everything above is the compositor's own configuration. That is a deliberate
@@ -680,9 +765,12 @@ yourself — nothing in this theme conflicts with either.
 | `alacritty.toml`, `ghostty.conf`, `kitty.conf`, `foot.ini` | full palette + background alpha |
 | `neovim.lua` | aether.nvim fed this exact palette, transparent background |
 | `hyprlock.conf` | translucent lock field over the blurred wallpaper |
-| `gtk.css` | translucent GTK4 window backgrounds — **install by hand**, see below |
+| `gtk.css` | translucent GTK4 window backgrounds |
+| `gtk3.css` | the same for GTK3 — chrome only, so documents stay opaque. This is what reaches the portal file chooser |
+| `unlock.png` | the Plymouth boot logo; `make-unlock.sh` regenerates it |
+| `hooks/` | applies and un-applies the four settings a theme file cannot reach, plus its own tests |
 | `palette/` | optional: retune the ANSI palette to the wallpaper's hue on every change |
-| `icons/` | hueless glass folder icons — **install by hand**, see `icons/README.md` |
+| `icons/` | hueless glass folder icons |
 | `backgrounds/` | six wallpapers |
 
 Each of those files carries a comment explaining *why* it looks the way it

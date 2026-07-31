@@ -3,21 +3,21 @@
 # Liquid Glass — undo ./install.
 #
 # You do not need this to stop using the theme. Switching away is enough:
-# Omarchy rebuilds current/theme, the gtk.css shim's import silently no-ops
-# because no other theme ships one, and the icon setting falls back to
-# Yaru-blue. This is only for reclaiming the two things ./install left on disk,
-# plus the harmoniser if it was set up.
+# Omarchy rebuilds current/theme, the hook takes its own @import lines back out
+# of your GTK stylesheets, and the icon setting falls back to Yaru-blue. This
+# is only for reclaiming what ./install left on disk — the hook itself and the
+# icon directory — plus the harmoniser if it was set up.
 #
-# hyprlock's rounding and fastfetch's colours are handled by running the
-# de-apply hook one last time with an empty theme name, which restores the
-# originals it copied aside when it applied them. It restores rather than
-# guesses, and it declines to act on a file that no longer looks like the one
-# it wrote, so a `omarchy refresh` in between is safe.
+# The GTK shims, hyprlock's rounding and fastfetch's colours are all handled by
+# running the de-apply hook one last time with an empty theme name. It restores
+# rather than guesses, and it declines to act on a file that no longer looks
+# like the one it wrote, so an `omarchy refresh` in between is safe.
 
 set -euo pipefail
 
 ICON_DIR="$HOME/.local/share/icons/LiquidGlass"
 GTK4_CSS="$HOME/.config/gtk-4.0/gtk.css"
+GTK3_CSS="$HOME/.config/gtk-3.0/gtk.css"
 HOOK="$HOME/.config/omarchy/hooks/theme-set.d/liquid-glass"
 
 say() { printf '  %s\n' "$1"; }
@@ -33,17 +33,32 @@ if [[ -f $HOOK ]]; then
   say "removed   $HOOK (hyprlock and fastfetch restored)"
 fi
 
-if [[ -f $GTK4_CSS ]] && grep -qF 'omarchy/current/theme/gtk.css' "$GTK4_CSS"; then
-  rm -f "$GTK4_CSS"
-  say "removed   $GTK4_CSS"
-  restored=$(ls -1t "$GTK4_CSS".before-liquid-glass.* 2>/dev/null | head -1 || true)
-  if [[ -n ${restored:-} ]]; then
-    mv "$restored" "$GTK4_CSS"
-    say "restored  the gtk.css that was there before ($(basename "$restored"))"
+# The hook above already took the two @import lines back out — that is what
+# `revert_assets` does — and it does it by deleting one exact line, so anything
+# else in those files is still there and still the user's.
+#
+# What is left to clean up here is one piece of history. Versions of this theme
+# before the shim became an added line *replaced* ~/.config/gtk-4.0/gtk.css
+# outright, keeping a timestamped copy of whatever had been there. Anyone
+# upgrading across that change still has such a copy sitting next to their
+# stylesheet, and this is the last chance to put it back.
+#
+# Only ever restored over a gtk.css that is now absent. If there is a file
+# there, it is one the user has since written, and a five-version-old backup
+# does not get to overwrite it.
+legacy=$(ls -1t "$GTK4_CSS".before-liquid-glass.* 2>/dev/null | head -1 || true)
+if [[ -n ${legacy:-} ]]; then
+  if [[ ! -f $GTK4_CSS ]]; then
+    mv "$legacy" "$GTK4_CSS"
+    say "restored  the gtk.css an older version of this theme replaced ($(basename "$legacy"))"
+  else
+    say "kept      $legacy — $GTK4_CSS exists now, so it is not ours to overwrite"
   fi
-elif [[ -f $GTK4_CSS ]]; then
-  say "left      $GTK4_CSS alone — it is not our shim"
 fi
+
+for css in "$GTK4_CSS" "$GTK3_CSS"; do
+  [[ -f $css ]] && say "left      $css alone — our import line is out, the rest is yours"
+done
 
 if [[ -d $ICON_DIR ]]; then
   rm -rf "$ICON_DIR"
