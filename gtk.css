@@ -1,8 +1,24 @@
 /* Liquid Glass — GTK4 applications
  *
- * Copy to ~/.config/gtk-4.0/gtk.css. Omarchy applies no theme gtk.css, so
- * unlike everything else in this repo this one file has to be installed by
- * hand; see the README.
+ * Omarchy applies no theme gtk.css, so unlike everything else in this repo
+ * this one needs a hand to reach GTK. The README has you put a two-line shim
+ * at ~/.config/gtk-4.0/gtk.css that `@import`s this file from the
+ * current-theme path.
+ *
+ * That file used to be a *copy* of this one, and the reason it is not any
+ * more is worth keeping: a copy has no way to stop applying. Omarchy rewrites
+ * current/theme on every switch and no other theme ships a gtk.css, so a copy
+ * went on making every GTK4 app on the machine 25% translucent under themes
+ * that were never designed for it, with nothing in the new theme to point at.
+ * The import fails silently when the file is not there, which turns "the next
+ * theme has no gtk.css" from the objection to the mechanism. Measured on
+ * gnome-calculator's window body:
+ *
+ *     shim, current theme ships no gtk.css   54.9   opaque, reverted
+ *     old copied file, same situation        37.6   still translucent
+ *     shim, current theme ships this file    37.5   identical to the copy
+ *
+ * Same effect where it is wanted, gone where it is not.
  *
  * Without it the folder icons cannot work. They carry no colour and take the
  * colour of whatever is behind them, but inside a file manager that is the

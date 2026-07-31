@@ -160,30 +160,52 @@ what it had already written, so switching to Tokyo Night would leave Tokyo
 Night wearing this theme's tint. A theme that leaks colour into another theme's
 session is a worse bug than a green logo.
 
-### If you switch away
+### What this theme leaves behind when you switch away
 
-Two of the steps above write to files Omarchy owns rather than to the theme, so
-they outlive it. Nothing switches them back for you, and the failure is quiet —
-the next theme just looks slightly wrong with no indication why. Undo them when
-you leave:
+A theme should be removable by switching away from it. This is the full
+inventory of what Liquid Glass touches outside its own directory, audited
+rather than remembered, because two of these used to be real bugs — a bar
+twelve pixels too tall on every other theme, and every GTK4 app on the machine
+left translucent.
+
+**Reverts itself. Nothing to do.**
+
+| | why |
+|---|---|
+| The palette, and every terminal config | `omarchy-theme-set` rebuilds `current/theme` from scratch on each switch |
+| Icon *setting* (`icons.theme`) | `omarchy-theme-set-gnome` re-reads it per theme, falling back to `Yaru-blue` |
+| Browser tint, VSCode, keyboard LEDs | Omarchy re-runs its own setter for each on every switch |
+| `~/.config/gtk-4.0/gtk.css` | an `@import` that silently no-ops once the theme is gone — see above |
+| Bar height | the theme no longer asks for one; it never needed to |
+
+**Left installed, but inert.**
+
+| | |
+|---|---|
+| `~/.local/share/icons/LiquidGlass/` | an unreferenced icon directory once gsettings points elsewhere, like any installed icon theme. `rm -rf` it if you want the disk back |
+| `liquid-glass-harmonize.path` / `.service` | still enabled, and the first thing the script does is read `current/theme.name` and `exit 0` unless this theme is active. `systemctl --user disable --now liquid-glass-harmonize.path` removes it |
+
+**Genuinely outlives the theme — undo these by hand.**
 
 | File | Set to | Omarchy's default |
 |---|---|---|
 | `~/.config/hypr/hyprlock.conf` | `rounding = 22` | `rounding = 0` |
 | `~/.config/fastfetch/config.jsonc` | `"default"` ×22 | `green`, `blue`, `magenta` |
 
-Neither is destructive and `omarchy refresh config <file>` restores either one.
-The lock rounding is harmless under any theme — a rounded password box is not
-tied to this one. The fastfetch change is the one to think about, because it
-points those rows at the *terminal's* foreground: under a theme whose
-foreground is a different colour it simply follows that instead, which is
-usually what you want, but it is no longer the palette the other theme's author
-chose.
+Both are optional in the first place, neither is destructive, and
+`omarchy refresh config <file>` restores either. They are the two the theme
+cannot reach on its own: hyprlock because a theme may only substitute
+variables into Omarchy's shared `input-field` block, and fastfetch because
+`config.jsonc` is Omarchy's file. The lock rounding is harmless under any theme.
+The fastfetch change points those rows at the *terminal's* foreground, so under
+another theme it follows that theme's foreground — usually what you want, but
+no longer the palette its author chose.
 
-The bar height used to be a third row in this table. It is gone because it
-turned out to do nothing at all — see `waybar.css`. That is the shape the other
-two would take if they could: the best version of a setting a theme cannot own
-is not needing it.
+`palette/harmonize.py` deliberately does not patch either one. It could, and
+the objection is not ownership but revert: the harmoniser can be stopped from
+*writing* under another theme, and nothing would undo what it had already
+written. Leaking colour into another theme's session is worse than a green
+logo.
 
 ### Two files Omarchy will not install for you
 
@@ -192,18 +214,34 @@ checked out somewhere — `omarchy theme install` leaves a clone at
 `~/.config/omarchy/themes/liquid-glass`, so that path works.
 
 **`gtk.css` — translucent GTK4 windows.** Omarchy applies no theme `gtk.css`
-at all, so this one has to be copied:
+at all, so GTK needs a two-line file pointing at the theme's:
 
 ```bash
-cp ~/.config/omarchy/themes/liquid-glass/gtk.css ~/.config/gtk-4.0/gtk.css
+printf '@import url("../omarchy/current/theme/gtk.css");\n' > ~/.config/gtk-4.0/gtk.css
 ```
 
 Without it the glass folder icons cannot work. They carry no colour and take
 the colour of whatever is behind them, which inside a file manager is the file
 manager's own opaque background — so they render grey no matter what the
-wallpaper is. Log out and back in, or restart the app. Copied rather than
-`@import`ed from the current-theme path on purpose: that path is rewritten on
-every theme switch, and the next theme will not have a `gtk.css` in it.
+wallpaper is. Log out and back in, or restart the app.
+
+**This is an `@import`, not a copy, and that is the point.** Earlier versions
+copied the file, which had no way to stop applying: Omarchy rewrites
+`current/theme` on every switch and no other theme ships a `gtk.css`, so the
+copy went on making every GTK4 app on the machine 25% translucent under themes
+never designed for it. The import simply fails when the file is not there,
+which turns "the next theme has no gtk.css" from the objection into the
+mechanism. Measured on gnome-calculator's window body:
+
+| | window body |
+|---|---|
+| shim, current theme ships no `gtk.css` | **54.9** — opaque, reverted |
+| old copied file, same situation | 37.6 — still translucent |
+| shim, current theme ships this file | 37.5 — identical to the copy |
+
+The path is relative to `~/.config/gtk-4.0/`, so it resolves for any user with
+no editing. **If you copied the old file, overwrite it with the line above** —
+that is the whole migration.
 
 **`icons/` — the glass folders.** See `icons/README.md`; it is a `cp -r` and a
 `gtk-update-icon-cache`. `icons.theme` already points GNOME at the result, so
