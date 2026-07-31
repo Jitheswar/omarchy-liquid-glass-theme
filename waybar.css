@@ -214,9 +214,24 @@ window#waybar > box {
   color: @accent;
 }
 
-#battery.charging {
-  color: #8fd895;
-}
+/* There is no `#battery.charging` rule, and its absence is the point.
+ *
+ * It used to be green, and green is what a charging battery was for as long as
+ * it was plugged in — which on a desk is most of the day, and at 100% is most
+ * of the night. That made it the only coloured thing on the bar, permanently,
+ * in a theme whose whole argument three paragraphs up is that colour is held
+ * back until something has news. A battery filling up is not news. A battery
+ * that has *finished* filling up is the opposite of news, and that is the
+ * state it was shouting loudest in.
+ *
+ * Nothing is lost by removing it, because the glyph was already carrying the
+ * message: Omarchy's battery module ships a separate `charging` icon ramp with
+ * a bolt through it (config.jsonc, `format-icons`), so "power is connected"
+ * is legible from the shape without spending the bar's only hue on it.
+ *
+ * The two below stay, because they are the readings this module exists to
+ * make. They are also the reason the green had to go: an amber that means
+ * "20%" is worth nothing on a bar that is already showing a colour. */
 
 #battery.warning {
   color: #e5ce8a;
