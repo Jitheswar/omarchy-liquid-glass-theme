@@ -767,7 +767,7 @@ yourself — nothing in this theme conflicts with either.
 | `hyprlock.conf` | translucent lock field over the blurred wallpaper |
 | `gtk.css` | translucent GTK4 window backgrounds |
 | `gtk3.css` | the same for GTK3 — chrome only, so documents stay opaque. This is what reaches the portal file chooser |
-| `unlock.png` | the Plymouth boot logo; `make-unlock.sh` regenerates it |
+| `unlock.png`, `preview-unlock.png` | the Plymouth boot logo, and the catalogue entry that offers it under **Style → Unlock**; `make-unlock.sh` regenerates both |
 | `hooks/` | applies and un-applies the four settings a theme file cannot reach, plus its own tests |
 | `palette/` | optional: retune the ANSI palette to the wallpaper's hue on every change |
 | `icons/` | hueless glass folder icons |
@@ -777,7 +777,35 @@ Each of those files carries a comment explaining *why* it looks the way it
 does — for most of them, why they override Omarchy's generated template —
 worth reading before changing one.
 
-### The boot screen, and where the password box comes from
+### The boot screen
+
+It is opt-in, and it is offered rather than applied. **Omarchy menu → Style →
+Unlock** lists Liquid Glass alongside every stock theme; picking it opens a
+floating terminal and runs `omarchy-plymouth-set-by-theme liquid-glass`, which
+wants sudo because it writes into `/usr/share/plymouth` and rebuilds the
+initramfs. Nothing about the boot screen changes until someone chooses it —
+setting the theme does not touch Plymouth, and neither does `./install`.
+
+What puts it in that list is `preview-unlock.png`, and its presence is the
+entire gate: `default/elephant/omarchy_unlocks.lua` walks the theme
+directories and lists a theme only `if file_exists(preview_path)`. A theme with
+a perfectly good `unlock.png` and no preview is simply never offered, which is
+where this one was — the boot logo worked, and no menu would hand it to you.
+
+The preview is generated from `omarchy.script`'s own geometry rather than drawn,
+so it cannot drift from what actually boots, and it includes the padlock and
+password field because those are what you will really see.
+
+Same command from a terminal, if you would rather not go through the menu:
+
+```bash
+omarchy plymouth set-by-theme liquid-glass
+```
+
+`omarchy plymouth reset` — or **Default** in that same menu — puts the stock
+boot screen back.
+
+#### Where the password box comes from
 
 `unlock.png` is the logo and **only** the logo. The password field is drawn by
 Plymouth, not by the theme: `omarchy.script` places `entry.png` at
