@@ -30,12 +30,32 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 SRC="${OMARCHY_PATH:-$HOME/.local/share/omarchy}/logo.svg"
 OUT=unlock.png
 
-# 1108x523 is the size every stock theme's unlock.png uses. Plymouth scales the
-# logo to the screen, so the number that matters is the ratio, not the pixels —
-# matching it keeps this theme the same size as the others on the same monitor.
-CANVAS_W=1108
-CANVAS_H=523
-MARK_W=980   # leaves room either side for the bloom to fall off inside the canvas
+# ── Why the canvas hugs the mark ──────────────────────────────────────────
+# The first version of this used 1108x523, on the reasoning that it is what
+# every stock theme's unlock.png measures. That was the wrong thing to copy,
+# and simulating the boot screen is what showed it.
+#
+# Plymouth does not draw this logo on its own. It draws a password field too —
+# omarchy.script positions `entry.png` at `logo.y + logo.height + 40`, with a
+# padlock to its left and bullets inside it as you type — and the offset is
+# measured from the logo *image*, not from the ink in it. The stock logos fill
+# their canvas edge to edge, so 40px of image is 40px of visible gap. This one
+# is a mark on a transparent field with room left for the bloom, so every pixel
+# of padding pushed the password box further away: at 523 tall against a 230px
+# mark, the field landed ~186px below the wordmark and the two read as
+# unrelated things on the screen rather than one prompt.
+#
+# So the canvas is derived from the mark instead of fixed, and the margin is
+# the smallest one the bloom can live inside. The 40px Plymouth adds is then
+# roughly the 40px it was designed to be.
+#
+# MARK_W is 860 rather than 980 for the same reason: on a 1920px screen the
+# stock marks occupy ~42% of the width, and Plymouth renders the logo at native
+# size without scaling, so this is the one place where the pixel count decides
+# how big the thing actually looks at boot. Matching that keeps Liquid Glass
+# from being the one theme whose boot screen is noticeably larger than the rest.
+MARK_W=860
+MARGIN=46
 
 [[ -f $SRC ]] || { echo "error: $SRC not found (is Omarchy installed?)" >&2; exit 1; }
 command -v magick >/dev/null || { echo "error: imagemagick not installed" >&2; exit 1; }
@@ -49,6 +69,8 @@ trap 'rm -rf "$tmp"' EXIT
 magick -background none "$SRC" -resize ${MARK_W}x "$tmp/mask.png"
 W=$(magick identify -format '%w' "$tmp/mask.png")
 H=$(magick identify -format '%h' "$tmp/mask.png")
+CANVAS_W=$(( W + MARGIN * 2 ))
+CANVAS_H=$(( H + MARGIN * 2 ))
 
 # The bevel. glass-specular (0.34 over white, so effectively full white) at the
 # top edge, down to the theme's own foreground at the base — the same direction
@@ -67,8 +89,13 @@ magick -size "${W}x${H}" xc:white "$tmp/mask.png" -compose CopyOpacity -composit
 # even haze, and light around a bright object does not fall off evenly — it is
 # concentrated close in and trails off far out. The tight pass carries the
 # halo, the wide one the ambience.
-magick "$tmp/lit.png" -channel A -blur 0x10 -evaluate multiply 0.50 +channel "$tmp/glow-near.png"
-magick "$tmp/lit.png" -channel A -blur 0x30 -evaluate multiply 0.18 +channel "$tmp/glow-far.png"
+#
+# Both radii are sized to die out inside MARGIN. A Gaussian is spent by ~3σ, so
+# the wide pass at σ=15 is gone by 45px and the margin is 46 — the bloom
+# reaches the edge of the canvas and nothing is clipped. Widening one without
+# the other leaves a hard rectangular cut where the glow meets the boundary.
+magick "$tmp/lit.png" -channel A -blur 0x8  -evaluate multiply 0.50 +channel "$tmp/glow-near.png"
+magick "$tmp/lit.png" -channel A -blur 0x15 -evaluate multiply 0.20 +channel "$tmp/glow-far.png"
 
 magick -size "${CANVAS_W}x${CANVAS_H}" xc:none \
   "$tmp/glow-far.png"  -gravity center -compose over -composite \

@@ -777,6 +777,31 @@ Each of those files carries a comment explaining *why* it looks the way it
 does — for most of them, why they override Omarchy's generated template —
 worth reading before changing one.
 
+### The boot screen, and where the password box comes from
+
+`unlock.png` is the logo and **only** the logo. The password field is drawn by
+Plymouth, not by the theme: `omarchy.script` places `entry.png` at
+`logo.y + logo.height + 40`, with a padlock to its left and bullets inside it
+as you type, and reveals the lot when a password is actually wanted. Painting a
+field into the logo would put a second, non-functional box on the screen
+directly above the real one — the confusion, not the fix.
+
+What the theme *can* get wrong there is the geometry, and the first version of
+this file did. Plymouth measures that 40px offset from the logo image, not from
+the ink inside it. The stock logos fill their canvas edge to edge, so 40px of
+image is 40px of visible gap; this one is a mark on a transparent field with
+room left for the bloom, and at the stock 1108×523 against a 230px mark the
+password box landed ~186px below the wordmark and read as an unrelated thing
+sitting on the screen. The canvas is derived from the mark now — mark plus the
+smallest margin the bloom fits inside — so the prompt sits where every other
+theme puts it. `make-unlock.sh` carries the arithmetic.
+
+Restyling the field itself is out of reach from here, and worth knowing before
+trying: `omarchy-plymouth-set` copies `entry.png`, `bullet.png`, `lock.png` and
+`progress_bar.png` from Omarchy's own directory and recolours them with the
+theme's `foreground`, substituting nothing but the logo. A glass password field
+at boot would be a change to Omarchy, not to a theme.
+
 ## Tuning
 
 Everything in this section goes in `~/.config/hypr/looknfeel.conf`, which
