@@ -243,23 +243,39 @@ changed with the hook. The harmoniser runs on *wallpaper* changes, which is the
 wrong moment: it is never told a theme is being switched away from, so anything
 it wrote would have no matching revert. That is what the hook is for.
 
-### The rest of the install
+### The one manual step, and why there is one
+
+Install the theme and bootstrap it in a single line:
 
 ```bash
-~/.config/omarchy/themes/liquid-glass/install
+omarchy theme install https://github.com/Jitheswar/omarchy-liquid-glass-theme.git && \
+  ~/.config/omarchy/themes/liquid-glass/install
 ```
 
-That is everything `omarchy theme set` cannot do, in one command. Safe to run
-again — every step is idempotent, and re-running is how you pick up new icons
-after a `git pull`. `./uninstall` reverses all of it.
+That is the last time anything here needs running by hand. `./install` places
+exactly one file — a `theme-set` hook — and from then on everything outside the
+theme's own directory is applied, repaired and un-applied automatically:
 
-It does three things, described below: points GTK at the theme's `gtk.css`,
-installs the folder icons, and installs a hook that applies and **un**-applies
-the two settings living in files Omarchy owns. Nothing here is optional in
-practice — the glass folder icons need the first two to work at all, which is
-why they stopped being a list of commands to copy by hand.
+- switching **to** the theme installs the `gtk.css` shim, the folder icons,
+  hyprlock's rounding and fastfetch's key colours
+- switching **away** puts back the two that would not revert on their own
+- a `git pull` bringing new icons lands on the next switch, with no second
+  command — the hook re-copies them when the source is newer than the cache
+- anything deleted underneath it, by an Omarchy update or by hand, is restored
+  the next time the theme is set
+- deleting the theme removes every trace, including the hook itself
 
-#### What it does
+**Why one step and not zero.** Omarchy runs nothing from a theme directory.
+`omarchy theme install` clones the repo and calls `omarchy-theme-set`; theme
+templates are `.tpl` files substituted with colours, not scripts; and hooks
+live under `~/.config/omarchy/hooks/`, which belongs to the user rather than
+the theme. Something has to place that first file, and no supported mechanism
+will do it — so `./install` does, once, and then hands over.
+
+`./uninstall` reverses everything, and is only needed if you want the disk
+back — switching away or deleting the theme already un-applies it.
+
+#### What the hook does
 
 **`gtk.css` — translucent GTK4 windows.** Omarchy applies no theme `gtk.css`
 at all, so GTK gets a two-line file pointing at the theme's:

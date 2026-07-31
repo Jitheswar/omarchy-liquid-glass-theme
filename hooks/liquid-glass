@@ -38,7 +38,51 @@ FASTFETCH="$HOME/.config/fastfetch/config.jsonc"
 
 OUR_ROUNDING=22
 
+THEME_DIR="$HOME/.config/omarchy/themes/liquid-glass"
+ICON_DIR="$HOME/.local/share/icons/LiquidGlass"
+GTK4_CSS="$HOME/.config/gtk-4.0/gtk.css"
+SHIM='@import url("../omarchy/current/theme/gtk.css");'
+
 mkdir -p "$STATE"
+
+# ── Assets ────────────────────────────────────────────────────────────────
+# The gtk.css shim and the folder icons are re-asserted here on every switch
+# *to* this theme rather than written once by the installer, so that after the
+# single bootstrap nothing else ever has to be run by hand. A `git pull` that
+# brings new icons lands the next time the theme is set; a shim removed by an
+# Omarchy update comes back the same way.
+#
+# Neither is removed when switching away, on purpose. The shim is an @import
+# that silently no-ops once no theme ships a gtk.css, and the icon directory is
+# unreferenced the moment gsettings points elsewhere — so both are already
+# inert, and leaving them makes switching back instant. Only deletion of the
+# theme removes them; see self_remove_if_orphaned.
+
+apply_assets() {
+  [[ -d $THEME_DIR ]] || return 0
+
+  mkdir -p "$(dirname "$GTK4_CSS")"
+  if [[ ! -f $GTK4_CSS ]] || ! grep -qF 'omarchy/current/theme/gtk.css' "$GTK4_CSS"; then
+    # Anything already there that is not our shim is someone's own file. Keep a
+    # copy before replacing it; ./uninstall puts it back.
+    if [[ -f $GTK4_CSS ]]; then
+      cp "$GTK4_CSS" "$GTK4_CSS.before-liquid-glass.$(date +%s)"
+    fi
+    printf '%s\n' "$SHIM" >"$GTK4_CSS"
+  fi
+
+  # Only re-copy when the source is actually newer than what is installed, so
+  # a theme switch does not rebuild the icon cache every time for nothing.
+  if [[ -d $THEME_DIR/icons ]]; then
+    if [[ ! -d $ICON_DIR ]] || [[ $THEME_DIR/icons -nt $ICON_DIR/icon-theme.cache ]]; then
+      rm -rf "$ICON_DIR"
+      mkdir -p "$(dirname "$ICON_DIR")"
+      cp -r "$THEME_DIR/icons" "$ICON_DIR"
+      command -v gtk-update-icon-cache >/dev/null &&
+        gtk-update-icon-cache -f "$ICON_DIR" >/dev/null 2>&1 || true
+    fi
+  fi
+}
 
 # ── hyprlock ──────────────────────────────────────────────────────────────
 # radius-lg, the step the OSD uses; the field is 650x100, the same order of
@@ -108,6 +152,7 @@ self_remove_if_orphaned() {
 }
 
 if [[ $THEME == "liquid-glass" ]]; then
+  apply_assets
   apply_hyprlock
   apply_fastfetch
 else

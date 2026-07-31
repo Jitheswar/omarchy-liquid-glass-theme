@@ -1,116 +1,81 @@
 #!/bin/bash
 #
-# Liquid Glass — the two pieces `omarchy theme set` cannot do for you.
+# Liquid Glass — bootstrap.
 #
-# Omarchy applies a theme by rebuilding ~/.config/omarchy/current/theme and
-# re-running its own setters. That covers everything in this repo except two
-# things, because neither lives anywhere Omarchy looks:
+# Run this once, ever. It installs one file — a theme-set hook — and then gets
+# out of the way. Everything the theme needs outside its own directory is
+# applied, re-applied and un-applied by that hook from then on: the gtk.css
+# shim, the folder icons, hyprlock's rounding and fastfetch's key colours.
 #
-#   - GTK4 reads ~/.config/gtk-4.0/gtk.css and nothing else. Omarchy applies no
-#     theme gtk.css at all, so the theme needs a file there pointing back at it.
-#   - Icon themes are directories under ~/.local/share/icons with a cache built
-#     by gtk-update-icon-cache. A theme directory is not one.
+# It is one command rather than none because Omarchy runs nothing from a theme
+# directory. `omarchy theme install` clones the repo and calls
+# omarchy-theme-set; theme templates are `.tpl` files substituted with colours,
+# not scripts; and hooks live under ~/.config/omarchy/hooks/, which is the
+# user's. So something has to place that first file. This is that something,
+# and it is the only step that is ever manual.
 #
-# Both were manual steps in the README and are not optional in practice — the
-# glass folder icons need both to work at all — so they are one command now.
+# After this:
+#   - switching to the theme applies everything, and repairs anything missing
+#   - switching away un-applies what would not revert on its own
+#   - a `git pull` that brings new icons lands on the next switch
+#   - deleting the theme removes every trace, including this hook
 #
-# Safe to run again. Every step is idempotent, and re-running is how you pick
-# up new icons after a `git pull`.
-#
-# Undo with ./uninstall.
+# Safe to run again; it is idempotent. ./uninstall reverses it.
 
 set -euo pipefail
 
 THEME_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ICON_DIR="$HOME/.local/share/icons/LiquidGlass"
-GTK4_CSS="$HOME/.config/gtk-4.0/gtk.css"
-SHIM='@import url("../omarchy/current/theme/gtk.css");'
+HOOK_DIR="$HOME/.config/omarchy/hooks/theme-set.d"
+STATE="${XDG_STATE_HOME:-$HOME/.local/state}/liquid-glass"
+FASTFETCH="$HOME/.config/fastfetch/config.jsonc"
 
 say() { printf '  %s\n' "$1"; }
 
-echo "Liquid Glass — installing the two pieces Omarchy does not."
+echo "Liquid Glass — bootstrapping."
 echo
 
-# ── GTK4 ──────────────────────────────────────────────────────────────────
-# A shim rather than a copy, and the distinction is load-bearing. A copy has no
-# way to stop applying: Omarchy rewrites current/theme on every switch and no
-# other theme ships a gtk.css, so a copy goes on making every GTK4 app 25%
-# translucent under themes never designed for it. The import fails silently
-# once this theme is gone, which is exactly the wanted behaviour.
-#
-# The path is relative to ~/.config/gtk-4.0/, so it needs no editing per user.
-mkdir -p "$(dirname "$GTK4_CSS")"
-if [[ -f $GTK4_CSS ]] && ! grep -qF 'omarchy/current/theme/gtk.css' "$GTK4_CSS"; then
-  # Something else is already there — most likely the old copied version of
-  # this file, but it could be the user's own. Keep it rather than clobber it.
-  backup="$GTK4_CSS.before-liquid-glass.$(date +%s)"
-  cp "$GTK4_CSS" "$backup"
-  say "existing gtk.css saved to $(basename "$backup")"
+if [[ ! -f $THEME_DIR/hooks/liquid-glass ]]; then
+  echo "  error: $THEME_DIR/hooks/liquid-glass is missing." >&2
+  exit 1
 fi
-printf '%s\n' "$SHIM" >"$GTK4_CSS"
-say "gtk.css   -> $GTK4_CSS"
 
-# ── Icons ─────────────────────────────────────────────────────────────────
-# icons.theme already points GNOME at "LiquidGlass"; this is only the payload.
-# Omarchy re-reads icons.theme on every switch and falls back to Yaru-blue when
-# the active theme has none, so nothing here needs undoing to leave the theme —
-# the directory simply stops being referenced.
-if [[ -d $THEME_DIR/icons ]]; then
-  rm -rf "$ICON_DIR"
-  cp -r "$THEME_DIR/icons" "$ICON_DIR"
-  if command -v gtk-update-icon-cache >/dev/null; then
-    gtk-update-icon-cache -f "$ICON_DIR" >/dev/null 2>&1 || true
-    say "icons     -> $ICON_DIR (cache rebuilt)"
+mkdir -p "$HOOK_DIR"
+install -m 755 "$THEME_DIR/hooks/liquid-glass" "$HOOK_DIR/liquid-glass"
+say "hook -> $HOOK_DIR/liquid-glass"
+
+# The one state this cannot repair, and it matters for anyone who followed the
+# older README's manual steps.
+#
+# The hook can only put a file back if it was the thing that changed it — it
+# copies the original aside on the way in and restores that, because mapping
+# fastfetch's single "default" back to the three colours it replaced is not
+# invertible. Applied by hand, there is no such copy, and nothing here can
+# honestly invent one: the file on disk is already the modified version.
+#
+# So say it plainly rather than leave a setting that silently never reverts.
+if [[ -f $FASTFETCH ]] && grep -q '"keyColor": "default"' "$FASTFETCH" &&
+  [[ ! -f $STATE/fastfetch.config.jsonc.orig ]]; then
+  echo
+  say "note: fastfetch already carries this theme's colours, but from a hand"
+  say "      edit rather than from the hook — so there is no original on file"
+  say "      and it would not revert when you switch away. To hand it over:"
+  say "        omarchy refresh config fastfetch/config.jsonc && $THEME_DIR/install"
+fi
+
+# Run it now for whatever theme is currently set, so bootstrapping has exactly
+# the same effect as switching. Not silenced: a failure here leaves things
+# half-applied and should be visible.
+CURRENT="$(cat "$HOME/.config/omarchy/current/theme.name" 2>/dev/null || echo '')"
+if bash "$HOOK_DIR/liquid-glass" "$CURRENT"; then
+  if [[ $CURRENT == "liquid-glass" ]]; then
+    say "applied for the active theme"
   else
-    say "icons     -> $ICON_DIR (gtk-update-icon-cache not found; icons may not appear until it is run)"
+    say "installed; it will apply when you switch to Liquid Glass (currently: ${CURRENT:-none})"
   fi
 else
-  say "icons     -> skipped, no icons/ directory in $THEME_DIR"
-fi
-
-# ── The de-apply hook ─────────────────────────────────────────────────────
-# Omarchy runs everything in hooks/theme-set.d/ on every theme change, passing
-# the new theme's name. That is the only place a theme is told it is being
-# switched *away from*, which is what the two settings below need: hyprlock's
-# rounding and fastfetch's key colours live in Omarchy's files, so nothing else
-# would ever put them back. The hook applies them when this theme is set and
-# restores the originals when it is not — see hooks/liquid-glass.
-HOOK_DIR="$HOME/.config/omarchy/hooks/theme-set.d"
-if [[ -f $THEME_DIR/hooks/liquid-glass ]]; then
-  mkdir -p "$HOOK_DIR"
-  install -m 755 "$THEME_DIR/hooks/liquid-glass" "$HOOK_DIR/liquid-glass"
-  say "hook      -> $HOOK_DIR/liquid-glass"
-
-  # Migration check, and it matters for anyone who followed the older README.
-  #
-  # The hook can only put a file back if it was the one that changed it — it
-  # copies the original aside on the way in and restores that, because mapping
-  # fastfetch's single "default" back to the three colours it replaced is not
-  # invertible. If these settings were applied by hand before the hook existed,
-  # there is no such copy, and nothing here can honestly invent one: the
-  # current file is already the modified one.
-  #
-  # So say so rather than leave a setting that silently never reverts.
-  STATE="${XDG_STATE_HOME:-$HOME/.local/state}/liquid-glass"
-  FF="$HOME/.config/fastfetch/config.jsonc"
-  if [[ -f $FF ]] && grep -q '"keyColor": "default"' "$FF" && [[ ! -f $STATE/fastfetch.config.jsonc.orig ]]; then
-    echo
-    say "note: fastfetch already carries this theme's colours, but from a"
-    say "      hand edit rather than from the hook, so there is no original to"
-    say "      restore and it would not revert when you switch away. To hand it"
-    say "      over, restore Omarchy's copy and run this script again:"
-    say "        omarchy refresh config fastfetch/config.jsonc && $THEME_DIR/install"
-  fi
-
-  # Run it now for the current theme, so installing has the same effect as
-  # switching to it. Not silenced: a hook that fails here would leave settings
-  # half-applied, and that should be visible rather than swallowed by `|| true`.
-  if ! bash "$HOOK_DIR/liquid-glass" "$(cat "$HOME/.config/omarchy/current/theme.name" 2>/dev/null || echo '')"; then
-    say "warning: the theme-set hook exited non-zero; see above"
-  fi
+  say "warning: the hook exited non-zero; see above"
 fi
 
 echo
-echo "Done. Restart GTK apps, or log out and back in, to see the folders."
-echo "Optional extras the theme does not assume you want:"
-echo "  palette/  — pull the terminal palette toward the wallpaper's hue (see README)"
+echo "Done — and that is the last time anything here needs running by hand."
+echo "Restart GTK apps, or log out and back in, to see the folders."
