@@ -57,9 +57,35 @@ window#waybar > box {
     rgba(0, 0, 0, 0.35) 100%
   );
 
-  /* Sized for `"height": 38` in config.jsonc (Omarchy ships 26, which leaves
-     the pill only ~18px of interior once margins and borders are taken out —
-     legible, but cramped). A theme cannot set that value; see the README. */
+  /* Nothing here sets the bar's height, and nothing needs to. The bar is as
+     tall as its contents demand — the module clusters below carry
+     `margin: 5px 8px` and the workspace pills `padding: 4px 9px`, and GTK will
+     not shrink a layer under what its children ask for. On the shipped font
+     that lands at 45px.
+
+     This file used to say "sized for `"height": 38` in config.jsonc" and send
+     you to set it. That was wrong twice over, and it took measuring all four
+     combinations to see how wrong:
+
+         config height 26, no min-height   ->  45px
+         config height 38, no min-height   ->  45px
+         config height 26, min-height 30   ->  45px
+         config height 38, min-height 30   ->  45px
+
+     waybar's `height` is a floor, not a height, and this bar clears it in
+     every case — so the instruction changed nothing about *this* theme and
+     never had. What it did do was write 38 into `~/.config/waybar/config.jsonc`,
+     which is Omarchy's file and not the theme's, where it survived switching
+     away: every other theme is drawn for the stock 26 and inherited a bar
+     twelve pixels too tall with no clue where it came from. A setting that
+     does nothing here and breaks the next theme is the worst of both.
+
+     A min-height was the obvious replacement and is also not here, for the
+     same reason the workspace bloom further down is not: at any value the
+     children already exceed it, it changes no pixel, and this file does not
+     keep declarations that do nothing. If the font ever shrinks far enough
+     that 45 is not reached, the honest fix is a min-height *then*, with a
+     measurement beside it. */
   margin: 4px 10px 4px 10px;
   padding: 0 4px;
   border: 1px solid @glass_edge;

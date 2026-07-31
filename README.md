@@ -90,16 +90,24 @@ under rather than a happy accident, and the section on what it costs is
 omarchy theme install https://github.com/Jitheswar/omarchy-liquid-glass-theme.git
 ```
 
-Then set the bar height, which a theme has no way to reach — it lives in
-`~/.config/waybar/config.jsonc`, not in any theme file:
+That is the whole install for the bar. Earlier versions of this file told you
+to set `"height": 38` in `~/.config/waybar/config.jsonc`, and **if you followed
+that, put it back to 26**:
 
 ```jsonc
-"height": 38,   // Omarchy ships 26
+"height": 26,   // Omarchy's default
 ```
 
-At 26 the floating pill has only ~18px of interior once margins and borders
-are taken out. It works, but it reads as a thin strip rather than a panel.
-Run `omarchy restart waybar` afterwards.
+The instruction was wrong twice over. waybar's `height` is a floor rather than
+a height, and this bar clears it either way — it is as tall as its contents
+demand, which on the shipped font is 45px whether config.jsonc says 26 or 38.
+So it changed nothing here. What it *did* change was a file Omarchy owns and
+the theme does not, where 38 survived switching away and left every other
+theme — all of them drawn for the stock 26 — with a bar twelve pixels too tall
+and no clue why.
+
+Nothing replaces it. The measurements are in `waybar.css` beside the margin
+that actually does the work.
 
 Then round the lock field, which a theme cannot reach either. Change this one
 line inside the `input-field { }` block of `~/.config/hypr/hyprlock.conf`:
@@ -151,6 +159,31 @@ can be stopped from *writing* under another theme, but nothing would revert
 what it had already written, so switching to Tokyo Night would leave Tokyo
 Night wearing this theme's tint. A theme that leaks colour into another theme's
 session is a worse bug than a green logo.
+
+### If you switch away
+
+Two of the steps above write to files Omarchy owns rather than to the theme, so
+they outlive it. Nothing switches them back for you, and the failure is quiet —
+the next theme just looks slightly wrong with no indication why. Undo them when
+you leave:
+
+| File | Set to | Omarchy's default |
+|---|---|---|
+| `~/.config/hypr/hyprlock.conf` | `rounding = 22` | `rounding = 0` |
+| `~/.config/fastfetch/config.jsonc` | `"default"` ×22 | `green`, `blue`, `magenta` |
+
+Neither is destructive and `omarchy refresh config <file>` restores either one.
+The lock rounding is harmless under any theme — a rounded password box is not
+tied to this one. The fastfetch change is the one to think about, because it
+points those rows at the *terminal's* foreground: under a theme whose
+foreground is a different colour it simply follows that instead, which is
+usually what you want, but it is no longer the palette the other theme's author
+chose.
+
+The bar height used to be a third row in this table. It is gone because it
+turned out to do nothing at all — see `waybar.css`. That is the shape the other
+two would take if they could: the best version of a setting a theme cannot own
+is not needing it.
 
 ### Two files Omarchy will not install for you
 
