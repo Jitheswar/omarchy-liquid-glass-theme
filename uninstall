@@ -1,0 +1,74 @@
+#!/bin/bash
+#
+# Liquid Glass — undo ./install.
+#
+# You do not need this to stop using the theme. Switching away is enough:
+# Omarchy rebuilds current/theme, the gtk.css shim's import silently no-ops
+# because no other theme ships one, and the icon setting falls back to
+# Yaru-blue. This is only for reclaiming the two things ./install left on disk,
+# plus the harmoniser if it was set up.
+#
+# hyprlock's rounding and fastfetch's colours are handled by running the
+# de-apply hook one last time with an empty theme name, which restores the
+# originals it copied aside when it applied them. It restores rather than
+# guesses, and it declines to act on a file that no longer looks like the one
+# it wrote, so a `omarchy refresh` in between is safe.
+
+set -euo pipefail
+
+ICON_DIR="$HOME/.local/share/icons/LiquidGlass"
+GTK4_CSS="$HOME/.config/gtk-4.0/gtk.css"
+HOOK="$HOME/.config/omarchy/hooks/theme-set.d/liquid-glass"
+
+say() { printf '  %s\n' "$1"; }
+
+echo "Liquid Glass — removing what ./install put on disk."
+echo
+
+# Run the hook once with no theme name so it takes its own settings back out,
+# then remove it. Done first, because it needs the state directory it wrote.
+if [[ -f $HOOK ]]; then
+  bash "$HOOK" "" || true
+  rm -f "$HOOK"
+  say "removed   $HOOK (hyprlock and fastfetch restored)"
+fi
+
+if [[ -f $GTK4_CSS ]] && grep -qF 'omarchy/current/theme/gtk.css' "$GTK4_CSS"; then
+  rm -f "$GTK4_CSS"
+  say "removed   $GTK4_CSS"
+  restored=$(ls -1t "$GTK4_CSS".before-liquid-glass.* 2>/dev/null | head -1 || true)
+  if [[ -n ${restored:-} ]]; then
+    mv "$restored" "$GTK4_CSS"
+    say "restored  the gtk.css that was there before ($(basename "$restored"))"
+  fi
+elif [[ -f $GTK4_CSS ]]; then
+  say "left      $GTK4_CSS alone — it is not our shim"
+fi
+
+if [[ -d $ICON_DIR ]]; then
+  rm -rf "$ICON_DIR"
+  say "removed   $ICON_DIR"
+fi
+
+STATE="${XDG_STATE_HOME:-$HOME/.local/state}/liquid-glass"
+if [[ -d $STATE ]]; then
+  # Only ever empty by this point — the hook consumes its backups when it
+  # restores. Anything still here means a restore declined to run because the
+  # file had changed underneath it, so say so rather than deleting quietly.
+  if [[ -n $(ls -A "$STATE" 2>/dev/null) ]]; then
+    say "kept      $STATE — it still holds originals a restore declined to overwrite"
+  else
+    rmdir "$STATE" 2>/dev/null || true
+  fi
+fi
+
+if systemctl --user list-unit-files liquid-glass-harmonize.path >/dev/null 2>&1; then
+  systemctl --user disable --now liquid-glass-harmonize.path >/dev/null 2>&1 || true
+  rm -f "$HOME/.config/systemd/user/liquid-glass-harmonize."{path,service}
+  systemctl --user daemon-reload >/dev/null 2>&1 || true
+  say "removed   the harmoniser units"
+fi
+
+echo
+echo "Done. Two optional edits are left by design; see \"What this theme leaves"
+echo "behind when you switch away\" in the README."

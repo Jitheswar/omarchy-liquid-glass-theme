@@ -185,36 +185,84 @@ left translucent.
 | `~/.local/share/icons/LiquidGlass/` | an unreferenced icon directory once gsettings points elsewhere, like any installed icon theme. `rm -rf` it if you want the disk back |
 | `liquid-glass-harmonize.path` / `.service` | still enabled, and the first thing the script does is read `current/theme.name` and `exit 0` unless this theme is active. `systemctl --user disable --now liquid-glass-harmonize.path` removes it |
 
-**Genuinely outlives the theme — undo these by hand.**
+**Un-applies itself on the way out.**
 
-| File | Set to | Omarchy's default |
+| File | While active | On switching away |
 |---|---|---|
-| `~/.config/hypr/hyprlock.conf` | `rounding = 22` | `rounding = 0` |
-| `~/.config/fastfetch/config.jsonc` | `"default"` ×22 | `green`, `blue`, `magenta` |
+| `~/.config/hypr/hyprlock.conf` | `rounding = 22` | back to Omarchy's `0` |
+| `~/.config/fastfetch/config.jsonc` | `"default"` ×22 | the original file, verbatim |
 
-Both are optional in the first place, neither is destructive, and
-`omarchy refresh config <file>` restores either. They are the two the theme
-cannot reach on its own: hyprlock because a theme may only substitute
-variables into Omarchy's shared `input-field` block, and fastfetch because
-`config.jsonc` is Omarchy's file. The lock rounding is harmless under any theme.
-The fastfetch change points those rows at the *terminal's* foreground, so under
-another theme it follows that theme's foreground — usually what you want, but
-no longer the palette its author chose.
+These two live in files Omarchy owns rather than in the theme — hyprlock
+because a theme may only substitute variables into Omarchy's shared
+`input-field` block, fastfetch because `config.jsonc` is Omarchy's. They used
+to be manual edits that followed you to the next theme. `hooks/liquid-glass`,
+installed by `./install` into `~/.config/omarchy/hooks/theme-set.d/`, now
+handles both: Omarchy runs everything in that directory on *every* theme
+change and passes the new theme's name, which is the only moment a theme is
+told it is being switched away from.
 
-`palette/harmonize.py` deliberately does not patch either one. It could, and
-the objection is not ownership but revert: the harmoniser can be stopped from
-*writing* under another theme, and nothing would undo what it had already
-written. Leaking colour into another theme's session is worse than a green
-logo.
+Two rules it will not break, both of them tested:
 
-### Two files Omarchy will not install for you
+- **It restores rather than guesses.** Mapping `"default"` back to
+  green/blue/magenta is not invertible — three colours went in, one came out —
+  so the original is copied aside on the way in and put back byte-for-byte on
+  the way out. A full round trip `diff`s clean.
+- **It will not touch what is not ours.** A `rounding` you set yourself is left
+  alone in both directions, and a backup is discarded rather than restored if
+  the file stopped looking like the one the hook wrote — so an
+  `omarchy refresh` in between is safe.
 
-Both are optional and the theme is coherent without them. Both need the repo
-checked out somewhere — `omarchy theme install` leaves a clone at
-`~/.config/omarchy/themes/liquid-glass`, so that path works.
+### Removing the theme
+
+`./uninstall` is the clean path and takes effect immediately. Removing the
+theme through **Omarchy menu → Style → Remove theme** also works, but not at
+the moment you click it, and the difference is worth knowing:
+`omarchy-theme-remove` does nothing but `rm -rf` the theme directory. It does
+not switch themes and it fires no hook, so there is no moment for anything to
+run. Your desktop also keeps working, because `current/theme` still holds the
+copy Omarchy built.
+
+The cleanup happens at **the next theme change**, which in practice is your
+very next action — the theme you pick to replace it. The hook finds its own
+directory gone, and treats that as removal rather than a switch: it reverts
+hyprlock and fastfetch, removes the gtk.css shim, the icons, the harmoniser
+units and its state directory, and finally deletes itself. A theme that has
+been deleted should not keep running code on every switch forever.
+
+Verified end to end with the theme directory absent — hyprlock back to
+`rounding = 0`, shim gone, icons gone, units gone, state gone, hook
+self-removed.
+
+So both routes end in the same place. The only window where anything is left
+behind is *removed the theme and then never set another one*, and in that
+window `current/theme` still holds the full copy, so nothing looks broken
+either.
+
+`palette/harmonize.py` still does not patch either file, and that has not
+changed with the hook. The harmoniser runs on *wallpaper* changes, which is the
+wrong moment: it is never told a theme is being switched away from, so anything
+it wrote would have no matching revert. That is what the hook is for.
+
+### The rest of the install
+
+```bash
+~/.config/omarchy/themes/liquid-glass/install
+```
+
+That is everything `omarchy theme set` cannot do, in one command. Safe to run
+again — every step is idempotent, and re-running is how you pick up new icons
+after a `git pull`. `./uninstall` reverses all of it.
+
+It does three things, described below: points GTK at the theme's `gtk.css`,
+installs the folder icons, and installs a hook that applies and **un**-applies
+the two settings living in files Omarchy owns. Nothing here is optional in
+practice — the glass folder icons need the first two to work at all, which is
+why they stopped being a list of commands to copy by hand.
+
+#### What it does
 
 **`gtk.css` — translucent GTK4 windows.** Omarchy applies no theme `gtk.css`
-at all, so GTK needs a two-line file pointing at the theme's:
+at all, so GTK gets a two-line file pointing at the theme's:
 
 ```bash
 printf '@import url("../omarchy/current/theme/gtk.css");\n' > ~/.config/gtk-4.0/gtk.css

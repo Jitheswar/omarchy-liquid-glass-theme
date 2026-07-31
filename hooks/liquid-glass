@@ -1,0 +1,117 @@
+#!/bin/bash
+#
+# Liquid Glass — apply and de-apply the settings a theme cannot reach.
+#
+# Installed by ./install to ~/.config/omarchy/hooks/theme-set.d/liquid-glass.
+# Omarchy runs everything in that directory on *every* theme change, passing
+# the new theme's name as $1 — so this is the one place that gets told both
+# "you are being switched to" and "you are being switched away from".
+#
+# Most of the theme needs neither. omarchy-theme-set rebuilds current/theme
+# from scratch and re-runs its own setters, the gtk.css shim is an @import that
+# silently no-ops once no theme ships one, and the icon setting falls back to
+# Yaru-blue. Those revert themselves.
+#
+# Two things do not, because they live in files Omarchy owns rather than in the
+# theme: hyprlock's corner rounding, and fastfetch's key colours. Left to
+# themselves they follow you to the next theme — a rounded lock field and a
+# terminal-foreground logo under a theme that asked for neither. This hook is
+# what makes them behave like the rest of the theme.
+#
+# Two rules it will not break:
+#
+#   1. Never guess. Reverting fastfetch's colours by mapping "default" back to
+#      green/blue/magenta would be lossy — the original file used three
+#      different colours and the applied one uses a single value, so the
+#      mapping cannot be inverted. Instead the original is copied aside on the
+#      way in and restored verbatim on the way out.
+#   2. Never touch what is not ours. If a file no longer looks like something
+#      this hook applied, it is left exactly as it is. Someone editing their
+#      own hyprlock rounding should not have it reset by a theme switch.
+
+set -euo pipefail
+
+THEME="${1:-}"
+STATE="${XDG_STATE_HOME:-$HOME/.local/state}/liquid-glass"
+HYPRLOCK="$HOME/.config/hypr/hyprlock.conf"
+FASTFETCH="$HOME/.config/fastfetch/config.jsonc"
+
+OUR_ROUNDING=22
+
+mkdir -p "$STATE"
+
+# ── hyprlock ──────────────────────────────────────────────────────────────
+# radius-lg, the step the OSD uses; the field is 650x100, the same order of
+# size. Omarchy ships rounding = 0 inside its own input-field block, which a
+# theme may not override — see the long note at the top of hyprlock.conf.
+
+apply_hyprlock() {
+  [[ -f $HYPRLOCK ]] || return 0
+  grep -qE '^\s*rounding\s*=\s*0\s*$' "$HYPRLOCK" || return 0
+  cp "$HYPRLOCK" "$STATE/hyprlock.conf.orig"
+  sed -i -E "s/^(\s*rounding\s*=\s*)0\s*$/\1$OUR_ROUNDING/" "$HYPRLOCK"
+}
+
+revert_hyprlock() {
+  [[ -f $HYPRLOCK ]] || return 0
+  # Only ours if it is still exactly the value we wrote.
+  grep -qE "^\s*rounding\s*=\s*$OUR_ROUNDING\s*$" "$HYPRLOCK" || return 0
+  sed -i -E "s/^(\s*rounding\s*=\s*)$OUR_ROUNDING\s*$/\10/" "$HYPRLOCK"
+  rm -f "$STATE/hyprlock.conf.orig"
+}
+
+# ── fastfetch ─────────────────────────────────────────────────────────────
+# The logo and every module key point at "default", which emits ESC[39m — the
+# terminal's own foreground, and therefore the one colour in this theme that
+# already tracks the wallpaper. fastfetch already emits ESC[1m for keys
+# whatever their colour, so the key/value distinction is carried by weight and
+# nothing is lost by removing the hues.
+
+apply_fastfetch() {
+  [[ -f $FASTFETCH ]] || return 0
+  grep -q '"keyColor": "default"' "$FASTFETCH" && return 0   # already applied
+  cp "$FASTFETCH" "$STATE/fastfetch.config.jsonc.orig"
+  sed -i -E 's/"keyColor": "(green|blue|magenta)"/"keyColor": "default"/g' "$FASTFETCH"
+  sed -i -E 's/"color": \{ "1": "green" \}/"color": { "1": "default" }/' "$FASTFETCH"
+}
+
+revert_fastfetch() {
+  [[ -f $STATE/fastfetch.config.jsonc.orig ]] || return 0
+  [[ -f $FASTFETCH ]] || return 0
+  # Only restore over a file that still looks like the one we wrote. If Omarchy
+  # has refreshed it, or the user has rewritten it, the backup is stale and
+  # putting it back would undo their work.
+  grep -q '"keyColor": "default"' "$FASTFETCH" || { rm -f "$STATE/fastfetch.config.jsonc.orig"; return 0; }
+  mv "$STATE/fastfetch.config.jsonc.orig" "$FASTFETCH"
+}
+
+# ── Orphan cleanup ────────────────────────────────────────────────────────
+# If the theme directory is gone, the user deleted the theme rather than just
+# switching away. Revert, then remove this hook — a theme that has been deleted
+# should not keep running code on every switch forever.
+
+self_remove_if_orphaned() {
+  local dir="$HOME/.config/omarchy/themes/liquid-glass"
+  local gtk4="$HOME/.config/gtk-4.0/gtk.css"
+  [[ -d $dir ]] && return 0
+  # Only ever remove our own shim. Someone else's gtk.css living at that path
+  # is not ours to delete, and rule 2 at the top of this file applies hardest
+  # in the branch that runs when nobody is watching.
+  if [[ -f $gtk4 ]] && grep -qF 'omarchy/current/theme/gtk.css' "$gtk4"; then
+    rm -f "$gtk4"
+  fi
+  rm -rf "$HOME/.local/share/icons/LiquidGlass" 2>/dev/null || true
+  systemctl --user disable --now liquid-glass-harmonize.path >/dev/null 2>&1 || true
+  rm -f "$HOME/.config/systemd/user/liquid-glass-harmonize."{path,service} 2>/dev/null || true
+  rm -rf "$STATE" 2>/dev/null || true
+  rm -f "$HOME/.config/omarchy/hooks/theme-set.d/liquid-glass" 2>/dev/null || true
+}
+
+if [[ $THEME == "liquid-glass" ]]; then
+  apply_hyprlock
+  apply_fastfetch
+else
+  revert_hyprlock
+  revert_fastfetch
+  self_remove_if_orphaned
+fi
