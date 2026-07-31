@@ -52,11 +52,11 @@ mkdir -p "$STATE"
 # brings new icons lands the next time the theme is set; a shim removed by an
 # Omarchy update comes back the same way.
 #
-# Neither is removed when switching away, on purpose. The shim is an @import
-# that silently no-ops once no theme ships a gtk.css, and the icon directory is
+# Neither is ever removed by this hook, on purpose. The shim is an @import that
+# silently no-ops once no theme ships a gtk.css, and the icon directory is
 # unreferenced the moment gsettings points elsewhere — so both are already
-# inert, and leaving them makes switching back instant. Only deletion of the
-# theme removes them; see self_remove_if_orphaned.
+# inert, and leaving them makes switching back instant. ./uninstall removes
+# them; see the note further down about why this hook does not.
 
 apply_assets() {
   [[ -d $THEME_DIR ]] || return 0
@@ -73,13 +73,22 @@ apply_assets() {
 
   # Only re-copy when the source is actually newer than what is installed, so
   # a theme switch does not rebuild the icon cache every time for nothing.
+  #
+  # Built alongside and swapped in, never `rm -rf` then copy. Under `set -e` a
+  # failure between those two leaves no icon theme at all — and the directory
+  # gsettings is pointing at is not a safe thing to be briefly absent.
   if [[ -d $THEME_DIR/icons ]]; then
-    if [[ ! -d $ICON_DIR ]] || [[ $THEME_DIR/icons -nt $ICON_DIR/icon-theme.cache ]]; then
-      rm -rf "$ICON_DIR"
+    if [[ ! -f $ICON_DIR/index.theme ]] || [[ $THEME_DIR/icons -nt $ICON_DIR/icon-theme.cache ]]; then
+      local staging="$ICON_DIR.incoming.$$"
       mkdir -p "$(dirname "$ICON_DIR")"
-      cp -r "$THEME_DIR/icons" "$ICON_DIR"
+      rm -rf "$staging"
+      cp -r "$THEME_DIR/icons" "$staging"
       command -v gtk-update-icon-cache >/dev/null &&
-        gtk-update-icon-cache -f "$ICON_DIR" >/dev/null 2>&1 || true
+        gtk-update-icon-cache -f "$staging" >/dev/null 2>&1 || true
+      rm -rf "$ICON_DIR.outgoing.$$"
+      [[ -d $ICON_DIR ]] && mv "$ICON_DIR" "$ICON_DIR.outgoing.$$"
+      mv "$staging" "$ICON_DIR"
+      rm -rf "$ICON_DIR.outgoing.$$"
     fi
   fi
 }
@@ -129,26 +138,34 @@ revert_fastfetch() {
   mv "$STATE/fastfetch.config.jsonc.orig" "$FASTFETCH"
 }
 
-# ── Orphan cleanup ────────────────────────────────────────────────────────
-# If the theme directory is gone, the user deleted the theme rather than just
-# switching away. Revert, then remove this hook — a theme that has been deleted
-# should not keep running code on every switch forever.
-
-self_remove_if_orphaned() {
+# ── On the theme directory being absent ───────────────────────────────────
+# This used to delete everything — the gtk.css shim, the icon theme, the
+# harmoniser units, the state directory and finally the hook itself — on the
+# reasoning that a missing theme directory means the theme was deleted.
+#
+# It shipped, and it destroyed a working install. "The directory is missing" is
+# not the same as "the user removed the theme": omarchy-theme-install does
+# `rm -rf "$THEME_PATH"` before it clones, so the condition is transiently true
+# during an ordinary reinstall, and any theme change observed inside that
+# window took the whole install with it. The visible damage was folders losing
+# their icons and the browser losing its tint, several steps removed from
+# anything the user did.
+#
+# So it does nothing destructive now, and the reasoning is general rather than
+# a patch for one race: a heuristic gets to *revert configuration*, because
+# that is cheap and re-appliable, and it does not get to delete files the user
+# installed. The config revert above already runs whether the directory is
+# there or not, so deleting the theme still un-applies it — which was the point.
+# What is left behind afterwards is inert: the shim is an @import that resolves
+# to nothing, the icon directory is unreferenced once gsettings moves on, and
+# this hook exits immediately unless the theme is active.
+#
+# ./uninstall removes those, and it is the right place for it, because it is
+# the one path where the user has actually said so.
+note_if_absent() {
   local dir="$HOME/.config/omarchy/themes/liquid-glass"
-  local gtk4="$HOME/.config/gtk-4.0/gtk.css"
   [[ -d $dir ]] && return 0
-  # Only ever remove our own shim. Someone else's gtk.css living at that path
-  # is not ours to delete, and rule 2 at the top of this file applies hardest
-  # in the branch that runs when nobody is watching.
-  if [[ -f $gtk4 ]] && grep -qF 'omarchy/current/theme/gtk.css' "$gtk4"; then
-    rm -f "$gtk4"
-  fi
-  rm -rf "$HOME/.local/share/icons/LiquidGlass" 2>/dev/null || true
-  systemctl --user disable --now liquid-glass-harmonize.path >/dev/null 2>&1 || true
-  rm -f "$HOME/.config/systemd/user/liquid-glass-harmonize."{path,service} 2>/dev/null || true
-  rm -rf "$STATE" 2>/dev/null || true
-  rm -f "$HOME/.config/omarchy/hooks/theme-set.d/liquid-glass" 2>/dev/null || true
+  return 0
 }
 
 if [[ $THEME == "liquid-glass" ]]; then
@@ -158,5 +175,5 @@ if [[ $THEME == "liquid-glass" ]]; then
 else
   revert_hyprlock
   revert_fastfetch
-  self_remove_if_orphaned
+  note_if_absent
 fi

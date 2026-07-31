@@ -77,12 +77,14 @@ under rather than a happy accident, and the section on what it costs is
   range/power pairs, active against inactive, and the fullscreen exemption
   forced with an opaque colour to make its absence unambiguous. The numbers
   are in `hyprland.conf` beside the settings they justify.
-- **Not verified: motion blur.** It is a function of per-frame displacement,
-  so a screenshot caught mid-animation misses it and slowing the animation
-  down far enough to catch one removes the displacement being rendered. Both
-  were tried. What is verified is that it loads, that it engages only during
-  a move or resize, and that it costs nothing at rest — not what the smear
-  looks like. One line in [Tuning](#tuning) turns it off.
+- **Motion blur: shipped on, and now off.** It could not be photographed —
+  the effect is a function of per-frame displacement, so a screenshot caught
+  mid-animation misses it and slowing the animation down far enough to catch
+  one removes the displacement being rendered. It went out enabled anyway,
+  documented as asserted rather than measured, and the first report back was
+  that dragging a window flickered. Off by default now. The line to try it is
+  in [Tuning](#tuning) — it may well be fine on other hardware, but "we could
+  not test it" is a reason to leave something off, not a licence to ship it.
 
 ## Install
 
@@ -222,21 +224,29 @@ not switch themes and it fires no hook, so there is no moment for anything to
 run. Your desktop also keeps working, because `current/theme` still holds the
 copy Omarchy built.
 
-The cleanup happens at **the next theme change**, which in practice is your
-very next action — the theme you pick to replace it. The hook finds its own
-directory gone, and treats that as removal rather than a switch: it reverts
-hyprlock and fastfetch, removes the gtk.css shim, the icons, the harmoniser
-units and its state directory, and finally deletes itself. A theme that has
-been deleted should not keep running code on every switch forever.
+The **settings** un-apply at the next theme change, which in practice is your
+very next action — the theme you pick to replace it. hyprlock goes back to
+`rounding = 0` and fastfetch to its original colours, whether or not the theme
+directory is still there.
 
-Verified end to end with the theme directory absent — hyprlock back to
-`rounding = 0`, shim gone, icons gone, units gone, state gone, hook
-self-removed.
+The **files** — the shim, the icons, the harmoniser units — are left alone, and
+`./uninstall` is what removes them. That is a deliberate split, and it was
+learned the hard way.
 
-So both routes end in the same place. The only window where anything is left
-behind is *removed the theme and then never set another one*, and in that
-window `current/theme` still holds the full copy, so nothing looks broken
-either.
+An earlier version treated "theme directory missing" as "the user deleted the
+theme" and deleted all of it automatically. It shipped, and it destroyed a
+working install: `omarchy-theme-install` runs `rm -rf "$THEME_PATH"` *before*
+it clones, so that condition is transiently true during an ordinary reinstall,
+and a theme change observed inside that window took the icons, the shim and the
+harmoniser units with it. What the user saw was folders losing their glass and
+the browser losing its tint, several steps removed from anything they had done.
+
+The rule that replaced it is general rather than a patch for one race: **a
+heuristic may revert configuration, because that is cheap and re-appliable, and
+may not delete files someone installed.** Deleting the theme still un-applies
+it, which was the point; what stays behind is inert — the shim is an `@import`
+resolving to nothing, the icon directory is unreferenced once gsettings moves
+on, and the hook exits immediately unless the theme is active.
 
 `palette/harmonize.py` still does not patch either file, and that has not
 changed with the hook. The harmoniser runs on *wallpaper* changes, which is the
@@ -523,15 +533,21 @@ is unchanged (the old flat value averaged 0.40, this averages 0.37) — the
 shadow did not get heavier, it moved to where `offset = 0 3` was already
 pushing it.
 
-**Windows smear when they move.** `decoration:motion_blur`, at 12 samples.
-This is the one setting in the theme that is asserted rather than measured,
-and the reason is worth stating plainly: motion blur is a function of
-per-frame displacement, so every way of photographing it — a screenshot caught
-mid-animation, or slowing the animation down until a screenshot can catch it —
-destroys the thing being photographed. What is verified is that it loads, that
-it engages only during a move or resize, and that it costs nothing at rest.
-What it looks like in flight is your call; one line turns it off, in
-[Tuning](#tuning).
+**Windows do not smear when they move**, and `decoration:motion_blur` sits in
+`hyprland.conf` at `enabled = false` as the record of why.
+
+It shipped on. It was the one setting in the theme that was asserted rather
+than measured, because motion blur is a function of per-frame displacement and
+every way of photographing it destroys what is being photographed — a
+screenshot caught mid-animation misses it, and slowing the animation down until
+a screenshot can catch it removes the displacement. That was written down
+honestly and it still went out enabled. The first report back was that dragging
+a window flickered.
+
+The setting is fine; the reasoning was not. "Verified to load, and to cost
+nothing at rest" is not the same as verified, and an effect nobody has seen
+does not get to be a default. Turn it on in [Tuning](#tuning) if your hardware
+likes it better than this one did.
 
 **Transparency works two different ways, because apps fall into two camps.**
 
