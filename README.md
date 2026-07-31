@@ -122,6 +122,36 @@ two shape properties in the same position, `shadow_passes` and
 `outline_thickness`, are documented with suggested values at the top of
 `hyprlock.conf`.
 
+Then take the colour out of `fastfetch`, which is the third and last thing a
+theme cannot reach. In `~/.config/fastfetch/config.jsonc`, the logo carries
+`"color": { "1": "green" }` and the module rows carry `"keyColor"` in green,
+blue and magenta — 21 of them. Every one becomes:
+
+```jsonc
+"default"
+```
+
+That is not "make it grey". `default` emits `ESC[39m`, the terminal's *own*
+foreground — which, with the harmoniser installed, is the one colour in the
+theme that already tracks the wallpaper. So the logo and every key end up the
+same tinted off-white as the rest of your text, and follow the wallpaper from
+then on with nothing further to run. A one-time edit that stays dynamic.
+
+Nothing is lost by it. fastfetch already emits `ESC[1m` for keys regardless of
+colour, so the key/value distinction was being carried by **weight** before any
+of those hues were applied — the colour was decoration layered on a difference
+that already existed. Which is the same argument, and the same fix, as the
+green that used to sit on the battery in `waybar.css`. The percentage readings
+inside the rows keep their colour, because those are readings.
+
+**Why the theme cannot just ship this:** `config.jsonc` is Omarchy's file, not
+the theme's, and Omarchy rewrites it. `palette/harmonize.py` could be made to
+patch it on every wallpaper change, and deliberately is not — the harmoniser
+can be stopped from *writing* under another theme, but nothing would revert
+what it had already written, so switching to Tokyo Night would leave Tokyo
+Night wearing this theme's tint. A theme that leaks colour into another theme's
+session is a worse bug than a green logo.
+
 ### Two files Omarchy will not install for you
 
 Both are optional and the theme is coherent without them. Both need the repo
