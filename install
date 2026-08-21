@@ -66,7 +66,7 @@ fi
 # Run it now for whatever theme is currently set, so bootstrapping has exactly
 # the same effect as switching. Not silenced: a failure here leaves things
 # half-applied and should be visible.
-CURRENT="$(cat "$HOME/.config/omarchy/current/theme.name" 2>/dev/null || echo '')"
+CURRENT="$(cat "$HOME/.local/state/omarchy/current/theme.name" 2>/dev/null || echo '')"
 if bash "$HOOK_DIR/liquid-glass" "$CURRENT"; then
   if [[ $CURRENT == "liquid-glass" ]]; then
     say "applied for the active theme"

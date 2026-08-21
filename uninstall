@@ -8,7 +8,7 @@
 # is only for reclaiming what ./install left on disk — the hook itself and the
 # icon directory — plus the harmoniser if it was set up.
 #
-# The GTK shims, hyprlock's rounding and fastfetch's colours are all handled by
+# The GTK shims and fastfetch's colours are all handled by
 # running the de-apply hook one last time with an empty theme name. It restores
 # rather than guesses, and it declines to act on a file that no longer looks
 # like the one it wrote, so an `omarchy refresh` in between is safe.
@@ -30,7 +30,7 @@ echo
 if [[ -f $HOOK ]]; then
   bash "$HOOK" "" || true
   rm -f "$HOOK"
-  say "removed   $HOOK (hyprlock and fastfetch restored)"
+  say "removed   $HOOK (fastfetch restored)"
 fi
 
 # The hook above already took the two @import lines back out — that is what

@@ -1,0 +1,163 @@
+# Liquid Glass — Omarchy shell (4.0)
+#
+# Replaces the generated shell.toml, the way waybar.css / walker.css /
+# swayosd.css / mako.ini used to for the 3.8 stack. Values are static because
+# a shipped shell.toml is copied verbatim; the palette is the neutral one from
+# colors.toml and is duplicated here by design.
+#
+# Glass material, carried over from the 3.8 CSS: surfaces are translucent dark
+# panes over the compositor blur (see hyprland.lua layer rules), with a lit
+# top edge falling away toward the base — rgba(ffffff) at ~0.21 down to ~0.06,
+# 90deg, the same overhead light the window borders and inner rim use.
+# GTK-CSS could do gradient fills and inset bevels; this surface model takes a
+# flat fill plus one border, so the pane body is a single alpha tuned to land
+# where the old gradient's mid-stop did, and the rim carries the bevel.
+
+[bar]
+background       = "#0A0A0A"
+background-alpha = 0.50
+text             = "#E0E0E0"
+active           = "#F2798F"
+scale-with-font  = true
+size-horizontal  = 26
+size-vertical    = 28
+
+[hyprland]
+# Shared Hyprland-derived border tokens. Surface sections reference these so
+# lock, notifications, popups, and menu-style cards stay aligned with the
+# current Hyprland active-border gradient.
+active-border            = "rgba(fffffff2) rgba(ffffff99) rgba(80808066) rgba(000000cc) 90deg"
+active-border-foreground = "rgba(e0e0e0)"
+
+[controls]
+normal-color        = "#E0E0E0"
+normal-fill-alpha   = 0.04
+normal-border       = "#FFFFFF"
+normal-border-width = 1
+normal-border-alpha = 0.21
+
+hover-cursor-color        = "#FFFFFF"
+hover-cursor-fill-alpha   = 0.10
+hover-cursor-border       = "#FFFFFF"
+hover-cursor-border-width = 1
+hover-cursor-border-alpha = 0.34
+
+focus-color        = "#FFFFFF"
+focus-fill-alpha   = 0.08
+focus-border       = "#FFFFFF"
+focus-border-width = 1
+focus-border-alpha = 0.34
+
+selected-color        = "#FFFFFF"
+selected-fill-alpha   = 0.16
+selected-border       = "#FFFFFF"
+selected-border-width = 0
+selected-border-alpha = 1.0
+
+pressed-fill-alpha   = 0.22
+selection-fill-alpha = 0.35
+
+[spacing]
+scale = 1.0
+scale-with-font = true
+
+[font]
+base-size = 12
+
+[popups]
+# Flyouts and the OSD. The old swayosd pane was black at 0.30 with a 0.21 rim;
+# here the blur behind does the lifting, so the fill sits a touch higher.
+background       = "#0A0A0A"
+background-alpha = 0.55
+text             = "#E0E0E0"
+border           = "rgba(ffffff36) rgba(ffffff0f) 90deg"
+border-alpha     = 1.0
+
+[tooltip]
+# Kept near-opaque on purpose: a tooltip lands over app windows, not the
+# wallpaper, so there is nothing behind it to blur into glass.
+background       = "#0A0A0A"
+background-alpha = 0.97
+text             = "#E0E0E0"
+border           = "rgba(ffffff36) rgba(ffffff14) 90deg"
+border-alpha     = 1.0
+
+[notifications]
+# The old mako pane: black ~0.30 body, 0.30 rim, no gradient. omarchy-notifications
+# gets a compositor blur layer rule now, which mako never could.
+background       = "#0A0A0A"
+background-alpha = 0.60
+text             = "#E0E0E0"
+border           = "rgba(ffffff40) rgba(ffffff12) 90deg"
+border-alpha     = 1.0
+countdown        = "#FFFFFF"
+
+[launcher]
+# The old walker card: white 0.22 → black 0.28 → black 0.35, the most
+# transparent surface in the theme, under the deepest shadow (elev-3).
+background                = "#0A0A0A"
+background-alpha          = 0.55
+text                      = "#E0E0E0"
+border                    = "rgba(ffffff4d) rgba(ffffff14) 90deg"
+border-alpha              = 1.0
+scrim                     = "#000000"
+scrim-alpha               = 0.5
+selected-background       = "#FFFFFF"
+selected-background-alpha = 0.10
+selected-text             = "#FFFFFF"
+selected-border           = "rgba(ffffff55)"
+selected-border-alpha     = 0.35
+
+[menu]
+# Menus are read over app windows more often than over the wallpaper, so they
+# sit more opaque than the launcher card.
+background                = "#0A0A0A"
+background-alpha          = 0.75
+text                      = "#E0E0E0"
+border                    = "rgba(ffffff3d) rgba(ffffff12) 90deg"
+border-alpha              = 1.0
+scrim                     = "#000000"
+scrim-alpha               = 0.5
+selected-background       = "#FFFFFF"
+selected-background-alpha = 0.10
+selected-text             = "#FFFFFF"
+selected-border           = "rgba(ffffff55)"
+selected-border-alpha     = 0.35
+
+[polkit]
+# A password prompt is a security surface; it stays opaque whatever the theme
+# is doing everywhere else.
+background       = "#0A0A0A"
+background-alpha = 1.0
+text             = "#E0E0E0"
+text-error       = "#F2798F"
+border           = "rgba(ffffff36) rgba(ffffff0f) 90deg"
+border-error     = "#F2798F"
+border-alpha     = 1.0
+scrim            = "#000000"
+scrim-alpha      = 0.5
+accent           = "#FFFFFF"
+
+[lock]
+# The lock field replaces hyprlock's input-field, rounded 22 by the old hook.
+# Glassy but legible: the wallpaper behind is blurred by the shell itself.
+background       = "#0A0A0A"
+background-alpha = 0.65
+text             = "#E0E0E0"
+placeholder      = "#757575"
+text-error       = "#F2798F"
+border           = "rgba(ffffff36) rgba(ffffff0f) 90deg"
+border-active    = "rgba(ffffff59) rgba(ffffff26) 90deg"
+border-error     = "#F2798F"
+border-alpha     = 1.0
+selection        = "#FFFFFF"
+selection-alpha  = 0.45
+
+[image-picker]
+scrim                   = "#000000"
+scrim-alpha             = 0.5
+text                    = "#E0E0E0"
+selected-border         = "#FFFFFF"
+selected-border-alpha   = 1.0
+unselected-border       = "#E0E0E0"
+unselected-border-alpha = 0.28
