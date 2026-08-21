@@ -44,7 +44,13 @@ palette and nothing else. Check with `hyprctl version`.
 
 Recent Omarchy 3.x ships 0.56.0. Earlier 3.x releases do not, so the version
 of Omarchy is not on its own the thing to check — `hyprctl version` is.
-Developed and verified against Hyprland 0.56.0 / Omarchy 3.8.4.
+Developed and verified against Hyprland 0.56.0 / Omarchy 3.8.4, and ported to
+**Omarchy 4.0** (verified against 4.0.0 / Hyprland 0.56.2): the Hyprland side
+now ships as `hyprland.lua`, the shell surfaces are styled through
+`shell.toml` for Omarchy's Quickshell shell, and the hook writes its GTK shims
+to the new `~/.local/state/omarchy/current/theme` location. Omarchy 4.0 also
+removes the two things the 3.x install had to ask for by hand — there is no
+waybar to size and no hyprlock to round; the shell draws both itself.
 
 Nothing else is required. No plugin, no patched compositor, no `hyprpm`, no
 package outside what Omarchy already installs — clone it, set it, and every
@@ -76,7 +82,7 @@ under rather than a happy accident, and the section on what it costs is
   part of a real session is in any of the figures: falloff profile at four
   range/power pairs, active against inactive, and the fullscreen exemption
   forced with an opaque colour to make its absence unambiguous. The numbers
-  are in `hyprland.conf` beside the settings they justify.
+  are in `hyprland.lua` beside the settings they justify.
 - **Motion blur: shipped on, and now off.** It could not be photographed —
   the effect is a function of per-frame displacement, so a screenshot caught
   mid-animation misses it and slowing the animation down far enough to catch
@@ -92,47 +98,15 @@ under rather than a happy accident, and the section on what it costs is
 omarchy theme install https://github.com/Jitheswar/omarchy-liquid-glass-theme.git
 ```
 
-That is the whole install for the bar. Earlier versions of this file told you
-to set `"height": 38` in `~/.config/waybar/config.jsonc`, and **if you followed
-that, put it back to 26**:
+That is the whole install on Omarchy 4.0. The bar, the launcher, the OSD and
+the lock screen are all drawn by Omarchy's Quickshell shell now, and this
+theme styles them through `shell.toml` — there is no waybar config to size
+and no `hyprlock.conf` to round. (The 3.x versions of this file carried manual
+steps for both; if you are coming from 3.x, delete them from your notes along
+with any `"height": 38` you put in `~/.config/waybar/config.jsonc` and any
+`rounding = 22` you put in `~/.config/hypr/hyprlock.conf`.)
 
-```jsonc
-"height": 26,   // Omarchy's default
-```
-
-The instruction was wrong twice over. waybar's `height` is a floor rather than
-a height, and this bar clears it either way — it is as tall as its contents
-demand, which on the shipped font is 45px whether config.jsonc says 26 or 38.
-So it changed nothing here. What it *did* change was a file Omarchy owns and
-the theme does not, where 38 survived switching away and left every other
-theme — all of them drawn for the stock 26 — with a bar twelve pixels too tall
-and no clue why.
-
-Nothing replaces it. The measurements are in `waybar.css` beside the margin
-that actually does the work.
-
-Then round the lock field, which a theme cannot reach either. Change this one
-line inside the `input-field { }` block of `~/.config/hypr/hyprlock.conf`:
-
-```ini
-rounding = 22   # Omarchy ships 0
-```
-
-That is `radius-lg`, the same step the OSD uses — the field is 650x100, the
-same order of size. It takes effect the next time you lock; nothing to
-restart.
-
-**Known limitation:** the shipped theme alone cannot round the lock field.
-Omarchy's `hyprlock.conf` `source`s the theme's file and then writes its own
-`input-field { }` block, and hyprlock registers `input-field` as an
-anonymous-key-based category — so a second block from a theme adds a *second*
-password field rather than overriding the first. A theme is limited to
-substituting the five colour variables into that shared base config. The other
-two shape properties in the same position, `shadow_passes` and
-`outline_thickness`, are documented with suggested values at the top of
-`hyprlock.conf`.
-
-Then take the colour out of `fastfetch`, which is the third and last thing a
+Then take the colour out of `fastfetch`, which is the one thing left that a
 theme cannot reach. In `~/.config/fastfetch/config.jsonc`, the logo carries
 `"color": { "1": "green" }` and the module rows carry `"keyColor"` in green,
 blue and magenta — 21 of them. Every one becomes:
@@ -177,7 +151,7 @@ left translucent.
 | The palette, and every terminal config | `omarchy-theme-set` rebuilds `current/theme` from scratch on each switch |
 | Icon *setting* (`icons.theme`) | `omarchy-theme-set-gnome` re-reads it per theme, falling back to `Yaru-blue` |
 | Browser tint, VSCode, keyboard LEDs | Omarchy re-runs its own setter for each on every switch |
-| Bar height | the theme no longer asks for one; it never needed to |
+| Hyprland look and shell surfaces | the theme's `hyprland.lua` / `shell.toml` are replaced by the next theme's |
 
 **Left installed, but inert.**
 
@@ -192,16 +166,14 @@ left translucent.
 |---|---|---|
 | `~/.config/gtk-4.0/gtk.css` | one `@import` line, at the top | the line is deleted; the rest of the file is untouched |
 | `~/.config/gtk-3.0/gtk.css` | one `@import` line, at the top | same |
-| `~/.config/hypr/hyprlock.conf` | `rounding = 22`, inside `input-field` only | back to Omarchy's `0` |
 | `~/.config/fastfetch/config.jsonc` | `"default"` ×22 | the original file, verbatim |
 
-These four live in files **you** own rather than in the theme — hyprlock
-because a theme may only substitute variables into Omarchy's shared
-`input-field` block, fastfetch because `config.jsonc` is Omarchy's, and the two
+These live in files **you** own rather than in the theme — fastfetch because
+`config.jsonc` is Omarchy's, and the two
 stylesheets because Omarchy applies no theme GTK CSS at all. They used to be
 manual edits that followed you to the next theme. `hooks/liquid-glass`,
 installed by `./install` into `~/.config/omarchy/hooks/theme-set.d/`, now
-handles all four: Omarchy runs everything in that directory on *every* theme
+handles them: Omarchy runs everything in that directory on *every* theme
 change and passes the new theme's name, which is the only moment a theme is
 told it is being switched away from.
 
@@ -219,15 +191,9 @@ runs the lot against a throwaway `HOME`:
   green/blue/magenta is not invertible — three colours went in, one came out —
   so the original is copied aside on the way in and put back byte-for-byte on
   the way out. A full round trip `diff`s clean.
-- **It will not touch what is not ours.** A `rounding` you set yourself is left
-  alone in both directions, and a backup is discarded rather than restored if
-  the file stopped looking like the one the hook wrote — so an
-  `omarchy refresh` in between is safe. The hyprlock substitution is scoped to
-  the `input-field` block, too: it used to be unanchored, which rewrote
-  `rounding = 0` anywhere in the file, so a square avatar or panel you had
-  added in an `image` or `shape` block was quietly rounded off by a theme
-  switch. A file with two `input-field` blocks is ambiguous and is left alone
-  entirely rather than guessed at.
+- **It will not touch what is not ours.** A fastfetch file Omarchy refreshed or
+  a user rewrote is declined rather than restored over — the stale backup is
+  discarded instead. An `omarchy refresh` in between is safe.
 
 ### Removing the theme
 
@@ -240,9 +206,8 @@ run. Your desktop also keeps working, because `current/theme` still holds the
 copy Omarchy built.
 
 The **settings** un-apply at the next theme change, which in practice is your
-very next action — the theme you pick to replace it. hyprlock goes back to
-`rounding = 0` and fastfetch to its original colours, whether or not the theme
-directory is still there.
+very next action — the theme you pick to replace it. fastfetch goes back to
+its original colours whether or not the theme directory is still there.
 
 The **files** — the icons, the harmoniser units — are left alone, and
 `./uninstall` is what removes them. That is a deliberate split, and it was
@@ -281,8 +246,8 @@ That is the last time anything here needs running by hand. `./install` places
 exactly one file — a `theme-set` hook — and from then on everything outside the
 theme's own directory is applied, repaired and un-applied automatically:
 
-- switching **to** the theme installs the `gtk.css` shim, the folder icons,
-  hyprlock's rounding and fastfetch's key colours
+- switching **to** the theme installs the `gtk.css` shim, the folder icons
+  and fastfetch's key colours
 - switching **away** puts back the two that would not revert on their own
 - a `git pull` bringing new icons lands on the next switch, with no second
   command — the hook re-copies them when the source is newer than the cache
@@ -306,8 +271,8 @@ back — switching away or deleting the theme already un-applies it.
 theme GTK CSS at all, so each toolkit gets one line pointing at the theme's:
 
 ```bash
-printf '@import url("../omarchy/current/theme/gtk.css");\n' > ~/.config/gtk-4.0/gtk.css
-printf '@import url("../omarchy/current/theme/gtk3.css");\n' > ~/.config/gtk-3.0/gtk.css
+printf '@import url("../../.local/state/omarchy/current/theme/gtk.css");\n'  > ~/.config/gtk-4.0/gtk.css
+printf '@import url("../../.local/state/omarchy/current/theme/gtk3.css");\n' > ~/.config/gtk-3.0/gtk.css
 ```
 
 The hook **prepends** those lines rather than writing the files, and deletes
@@ -583,7 +548,7 @@ shadow did not get heavier, it moved to where `offset = 0 3` was already
 pushing it.
 
 **Windows do not smear when they move**, and `decoration:motion_blur` sits in
-`hyprland.conf` at `enabled = false` as the record of why.
+`hyprland.lua` at `enabled = false` as the record of why.
 
 It shipped on. It was the one setting in the theme that was asserted rather
 than measured, because motion blur is a function of per-frame displacement and
@@ -633,7 +598,8 @@ to lift the panel to near-white and take the near-white text with it. Two
 things push back: a dark halo behind the glyphs, which costs nothing against
 the wallpaper because it *is* the wallpaper's colour, and a launcher fill at
 `0.44` rather than `0.30` — a deliberate exception to clear-not-frosted,
-documented at the site in `walker.css`. Measured over a blank white window,
+documented at the site in the launcher stylesheet this theme shipped for
+Omarchy 3.x. Measured over a blank white window,
 item labels went from 2.3–3.1:1 to 4.1–4.8:1, which clears roughly WCAG AA.
 
 That fill has been wrong in both directions, and the fix was not the one that
@@ -642,7 +608,8 @@ opaque surface in a theme whose whole argument is that you can see through it.
 At 0.34 it looked right and put body text at 3.2:1. What actually reads as
 glass is the rim and the specular, not how thin the body is, so once those
 were pushed past their tokens the fill was free to sit where legibility needed
-it. The full sweep is in `walker.css`.
+it. The full sweep was documented in the launcher stylesheet this theme
+shipped for Omarchy 3.x.
 
 The selected row took a second fix of its own. Omarchy's stylesheet paints its
 label with the accent, which back when that accent was jade — on a pill this
@@ -675,7 +642,7 @@ pasted onto a straight edge — most of what makes a corner look moulded.
 around a floating panel doesn't get blurred along with the panel.
 
 `xray` is off on purpose: seeing other windows refracted behind the front one
-is the layered depth the theme is built around. Turn it on in `hyprland.conf`
+is the layered depth the theme is built around. Turn it on in `hyprland.lua`
 to trade that for lower GPU load.
 
 **Two surfaces blur on their own switch**, and both were opaque here until
@@ -742,7 +709,7 @@ and [liquid-glass-plugin-hyprpm](https://github.com/purple-lines/liquid-glass-pl
 both implement edge refraction, chromatic aberration, fresnel and specular
 highlights, and hyprglass reaches layer surfaces too, which matters because
 most of this theme *is* layer surfaces. Its `adaptive_dim` and `adaptive_boost`
-are the backdrop-sampling that `walker.css` correctly calls impossible in
+are the backdrop-sampling that the 3.x launcher stylesheet correctly called impossible in
 GTK-CSS — impossible there, entirely possible in the compositor.
 
 They are not used here, and the reason is the first line of this section. A
@@ -757,18 +724,15 @@ yourself — nothing in this theme conflicts with either.
 
 | File | |
 |---|---|
-| `colors.toml` | drives everything Omarchy generates (btop, helix, obsidian, gum, chromium, hyprlock…) |
-| `hyprland.conf` | blur, squircle rounding, specular borders, shadows, layer rules |
-| `waybar.css` | floating frosted bar with a lit rim |
-| `walker.css` | frosted launcher |
-| `swayosd.css`, `mako.ini` | frosted OSD and notifications |
+| `colors.toml` | drives everything Omarchy generates (btop, helix, obsidian, gum, chromium…) — the legacy ANSI names are still resolved by Omarchy 4.0 |
+| `hyprland.lua` | blur, squircle rounding, bevel borders, inner rim, shadows, layer rules — loaded automatically by Omarchy 4.0 |
+| `shell.toml` | glass styling for Omarchy's Quickshell shell: bar, launcher, OSD, notifications, lock field |
 | `alacritty.toml`, `ghostty.conf`, `kitty.conf`, `foot.ini` | full palette + background alpha |
 | `neovim.lua` | aether.nvim fed this exact palette, transparent background |
-| `hyprlock.conf` | translucent lock field over the blurred wallpaper |
 | `gtk.css` | translucent GTK4 window backgrounds |
 | `gtk3.css` | the same for GTK3 — chrome only, so documents stay opaque. This is what reaches the portal file chooser |
 | `unlock.png`, `preview-unlock.png` | the Plymouth boot logo, and the catalogue entry that offers it under **Style → Unlock**; `make-unlock.sh` regenerates both |
-| `hooks/` | applies and un-applies the four settings a theme file cannot reach, plus its own tests |
+| `hooks/` | applies and un-applies the settings a theme file cannot reach, plus its own tests |
 | `palette/` | optional: retune the ANSI palette to the wallpaper's hue on every change |
 | `icons/` | hueless glass folder icons |
 | `backgrounds/` | six wallpapers |
@@ -832,9 +796,11 @@ at boot would be a change to Omarchy, not to a theme.
 
 ## Tuning
 
-Everything in this section goes in `~/.config/hypr/looknfeel.conf`, which
-Omarchy sources *after* the theme — so anything you put there wins, and an
-update or a theme switch will not overwrite it.
+Everything in this section goes in `~/.config/hypr/looknfeel.lua`, which
+Omarchy loads *after* the theme — so anything you put there wins, and an
+update or a theme switch will not overwrite it. Omarchy 4.0 configures
+Hyprland in Lua; the 3.x snippets elsewhere on the internet are hyprlang and
+will not parse.
 
 ### Profile: lite
 
@@ -843,9 +809,15 @@ launcher. Blur cost scales with passes, and `xray` is the big one: it blurs
 only the wallpaper rather than resampling the windows stacked behind each
 surface.
 
-```ini
-decoration:blur:passes = 2      # from 3
-decoration:blur:xray   = true   # blur only the wallpaper, not windows behind
+```lua
+hl.config({
+  decoration = {
+    blur = {
+      passes = 2, -- from 3
+      xray = true, -- blur only the wallpaper, not windows behind
+    },
+  },
+})
 ```
 
 You lose the layered depth — windows behind the front one stop showing through
@@ -854,67 +826,65 @@ alone first and add `xray` only if that is not enough.
 
 ### Profile: reduced motion
 
-Neither Hyprland nor GTK has a `prefers-reduced-motion` equivalent, so there
-is nothing to switch on — the durations have to be overridden directly.
+Neither Hyprland nor the shell has a `prefers-reduced-motion` equivalent, so
+there is nothing to switch on — the durations have to be overridden directly.
 
-```ini
-animations {
-    # A straight line: no ease, no overshoot, no settle.
-    bezier = instant, 0, 0, 1, 1
+```lua
+-- A straight line: no ease, no overshoot, no settle.
+hl.curve("instant", { type = "bezier", points = { { 0, 0 }, { 1, 1 } } })
 
-    # Speeds are in deciseconds, so 0.5 is 50ms — short enough not to read as
-    # motion, long enough that surfaces do not visibly pop in and out.
-    animation = layersIn,   1, 0.5, instant, fade
-    animation = layersOut,  1, 0.5, instant, fade
-    animation = windows,    1, 0.5, instant
-    animation = windowsIn,  1, 0.5, instant
-    animation = windowsOut, 1, 0.5, instant
-    animation = fade,       1, 0.5, instant
-    animation = workspaces, 0, 0,   instant
-}
+-- Speeds are in deciseconds, so 2 is 200ms — short enough not to read as
+-- motion, long enough that surfaces do not visibly pop in and out.
+hl.animation({ leaf = "layersIn", enabled = true, speed = 2, bezier = "instant", style = "fade" })
+hl.animation({ leaf = "layersOut", enabled = true, speed = 2, bezier = "instant", style = "fade" })
+hl.animation({ leaf = "windows", enabled = true, speed = 2, bezier = "instant" })
+hl.animation({ leaf = "windowsIn", enabled = true, speed = 2, bezier = "instant" })
+hl.animation({ leaf = "windowsOut", enabled = true, speed = 2, bezier = "instant" })
+hl.animation({ leaf = "fade", enabled = true, speed = 2, bezier = "instant" })
+hl.animation({ leaf = "workspaces", enabled = false })
 ```
 
-For no motion at all, `animations { enabled = false }` on its own is enough
-and overrides everything above.
-
-That covers the compositor. The bar and the launcher animate in GTK-CSS, which
-`looknfeel.conf` cannot reach — those two transitions live in `waybar.css` and
-`walker.css`, both marked with a comment about the overshoot. Delete the
-`transition:` line in each, or drop the cubic-bezier for a plain `linear`, and
-run `omarchy restart waybar`.
+For no motion at all, `hl.config({ animations = { enabled = false } })` on its
+own is enough and overrides everything above.
 
 ### Making the launcher settle like everything else
 
-The `layersIn`/`layersOut` curves in `hyprland.conf` reach the OSD,
-notifications, the logout dialog and the bar — but not walker. Omarchy ships
-`layerrule = no_anim on, match:namespace walker`, and it is sourced before the
-theme, so the launcher opens instantly while every other surface eases in.
+The `layersIn`/`layersOut` curves in `hyprland.lua` reach the OSD,
+notifications and the bar — but not the launcher. Omarchy ships a `no_anim`
+layer rule for `omarchy-menu`, and it is loaded before the theme, so the
+launcher opens instantly while every other surface eases in.
 
 That is upstream's call about how fast a launcher should feel, so the theme
 leaves it alone. To take it back:
 
-```ini
-layerrule = no_anim off, match:namespace walker
+```lua
+hl.layer_rule({ match = { namespace = "omarchy-menu" }, no_anim = false })
 ```
 
-Later rules win, so this belongs in `looknfeel.conf` like everything else in
-this section. Blur and the `ignore_alpha` threshold already apply to walker
-either way — `no_anim` only governs animation.
+Later rules win, so this belongs in `looknfeel.lua` like everything else in
+this section. Blur and the `ignore_alpha` threshold already apply to the
+launcher either way — `no_anim` only governs animation.
 
 ### The inner rim, and turning the motion off
 
 Two settings people are most likely to want to move. Both are compositor
-options, so `looknfeel.conf` reaches them:
+options, so `looknfeel.lua` reaches them:
 
-```ini
-# The rim: brighter, or wider, or gone.
-decoration:glow:enabled      = false   # off entirely
-decoration:glow:range        = 20      # from 14 — wider ramp, closer to haze
-decoration:glow:render_power = 4       # from 2  — tighter, reads as a second outline
+```lua
+hl.config({
+  decoration = {
+    glow = {
+      enabled = false, -- off entirely
+      range = 20, -- from 14 — wider ramp, closer to haze
+      render_power = 4, -- from 2  — tighter, reads as a second outline
+    },
 
-# The smear on moving and resizing windows.
-decoration:motion_blur:enabled = false
-decoration:motion_blur:samples = 7     # from 12 — Hyprland's default, cheaper
+    motion_blur = {
+      enabled = false,
+      samples = 7, -- from 12 — Hyprland's default, cheaper
+    },
+  },
+})
 ```
 
 There is no per-window escape hatch for the rim. `no_blur`, `no_shadow` and
@@ -930,20 +900,21 @@ distance.
 
 ### Blur on the lock screen
 
-0.56 added `misc:session_lock_blur`, and the theme leaves it off deliberately.
+`misc:session_lock_blur` exists, and the theme leaves it off deliberately.
 Its own help text says you probably want `misc:session_lock_xray` with it, and
-that option keeps your workspaces rendering underneath the lock surface.
-Against Omarchy's hyprlock, which draws an opaque wallpaper, that renders a
-desktop nobody can see and bills the GPU for it. Against a hyprlock someone
-has made translucent, it puts the contents of their session on the lock
-screen — blurred, but there.
+that option keeps your workspaces rendering underneath the lock surface —
+which puts the contents of your session on the lock screen, blurred but there.
 
 A lock screen exists to not show you the desktop, so that is not a switch a
 theme should throw on a user's behalf. If you want it, you want it knowingly:
 
-```ini
-misc:session_lock_blur = true
-misc:session_lock_xray = true
+```lua
+hl.config({
+  misc = {
+    session_lock_blur = true,
+    session_lock_xray = true,
+  },
+})
 ```
 
 ### Frost instead of clear
@@ -951,20 +922,26 @@ misc:session_lock_xray = true
 Want it frosted instead of clear? Push the two settings that define the
 difference:
 
-```ini
-decoration:blur:size  = 8       # from 4
-decoration:blur:noise = 0.02    # from 0.003 — grain is what reads as "frosted"
+```lua
+hl.config({
+  decoration = {
+    blur = {
+      size = 8, -- from 4
+      noise = 0.02, -- from 0.003 — grain is what reads as "frosted"
+    },
+  },
+})
 ```
 
 Clearer or more solid *terminals*: `opacity` in `alacritty.toml`,
 `background-opacity` in `ghostty.conf`, `background_opacity` in `kitty.conf`,
 `alpha` in `foot.ini`. Below about `0.65` text starts to fight the wallpaper.
 
-Clearer or more solid *everything else* — the three `windowrule = opacity`
-lines at the bottom of `hyprland.conf`. Toward `1.0` if text looks too soft,
-toward `0.85` for more glass. The second number is the unfocused one and is
-where the contrast goes first; see the measurements in the comment above
-those lines before lowering it.
+Clearer or more solid *everything else* — the three `o.window` opacity rules
+at the bottom of `hyprland.lua`. Toward `1.0` if text looks too soft, toward
+`0.85` for more glass. The second number is the unfocused one and is where the
+contrast goes first; see the measurements in the comment above those lines
+before lowering it.
 
 ## Wallpapers
 

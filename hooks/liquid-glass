@@ -11,12 +11,13 @@
 # from scratch and re-runs its own setters, and the icon setting falls back to
 # Yaru-blue. Those revert themselves.
 #
-# Four things do not, because they live in files the *user* owns rather than in
-# the theme: the GTK4 and GTK3 stylesheets, hyprlock's corner rounding, and
-# fastfetch's key colours. Left to themselves they follow you to the next theme
-# — a rounded lock field and a terminal-foreground logo under a theme that
-# asked for neither. This hook is what makes them behave like the rest of the
-# theme.
+# Two things do not, because they live in files the *user* owns rather than in
+# the theme: the GTK4 and GTK3 stylesheets, and fastfetch's key colours.
+# (A third, hyprlock's corner rounding, existed on Omarchy 3.x; Omarchy 4.0
+# locks with omarchy-shell instead of hyprlock, so that section is gone.)
+# Left to themselves they follow you to the next theme — a terminal-foreground
+# logo under a theme that asked for neither. This hook is what makes them
+# behave like the rest of the theme.
 #
 # Three rules it will not break:
 #
@@ -38,21 +39,20 @@ set -euo pipefail
 
 THEME="${1:-}"
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}/liquid-glass"
-HYPRLOCK="$HOME/.config/hypr/hyprlock.conf"
 FASTFETCH="$HOME/.config/fastfetch/config.jsonc"
-
-OUR_ROUNDING=22
 
 THEME_DIR="$HOME/.config/omarchy/themes/liquid-glass"
 ICON_DIR="$HOME/.local/share/icons/LiquidGlass"
 
 # Two toolkits, two stylesheets, same mechanism. The relative path is resolved
-# against the directory the file sits in, so `../omarchy/...` reaches
-# ~/.config/omarchy from either ~/.config/gtk-4.0 or ~/.config/gtk-3.0.
+# against the directory the file sits in, so `../../.local/state/...` reaches
+# ~/.local/state/omarchy from either ~/.config/gtk-4.0 or ~/.config/gtk-3.0.
+# (Omarchy 4.0 moved the current-theme directory from ~/.config/omarchy/current
+# to ~/.local/state/omarchy/current.)
 GTK4_CSS="$HOME/.config/gtk-4.0/gtk.css"
 GTK3_CSS="$HOME/.config/gtk-3.0/gtk.css"
-SHIM4='@import url("../omarchy/current/theme/gtk.css");'
-SHIM3='@import url("../omarchy/current/theme/gtk3.css");'
+SHIM4='@import url("../../.local/state/omarchy/current/theme/gtk.css");'
+SHIM3='@import url("../../.local/state/omarchy/current/theme/gtk3.css");'
 
 mkdir -p "$STATE"
 
@@ -157,54 +157,6 @@ apply_assets() {
   fi
 }
 
-# ── hyprlock ──────────────────────────────────────────────────────────────
-# radius-lg, the step the OSD uses; the field is 650x100, the same order of
-# size. Omarchy ships rounding = 0 inside its own input-field block, which a
-# theme may not override — see the long note at the top of hyprlock.conf.
-#
-# Everything below is scoped to that one block, and it did not used to be. The
-# match and the substitution were both unanchored, so `rounding = 0` anywhere
-# in the file was rewritten. On a stock hyprlock.conf there is exactly one such
-# line and it is the right one, which is why this went unnoticed — but
-# `rounding` is also a valid key in hyprlock's `image` and `shape` blocks, so
-# anyone who had added a square avatar or a square panel of their own had it
-# quietly rounded off by a theme switch, and un-rounded again by the next one.
-#
-# A theme reaching into a user's config file at all is a thing to do narrowly
-# or not at all. This is the narrow version: one key, in one named block.
-
-# The value of `rounding` inside the input-field block, or nothing. Prints one
-# line per match, so a file with two input-field blocks yields two lines and
-# every comparison below fails — which is the wanted behaviour. An ambiguous
-# file is one to leave alone, not one to guess at.
-field_rounding() {
-  sed -n -E '/^[[:space:]]*input-field[[:space:]]*[{]/,/^[[:space:]]*[}]/ {
-    s/^[[:space:]]*rounding[[:space:]]*=[[:space:]]*([0-9]+)[[:space:]]*$/\1/p
-  }' "$1"
-}
-
-set_field_rounding() {
-  local file=$1 from=$2 to=$3
-  sed -i -E "/^[[:space:]]*input-field[[:space:]]*[{]/,/^[[:space:]]*[}]/ {
-    s/^([[:space:]]*rounding[[:space:]]*=[[:space:]]*)$from[[:space:]]*\$/\\1$to/
-  }" "$file"
-}
-
-apply_hyprlock() {
-  [[ -f $HYPRLOCK ]] || return 0
-  [[ $(field_rounding "$HYPRLOCK") == "0" ]] || return 0
-  cp "$HYPRLOCK" "$STATE/hyprlock.conf.orig"
-  set_field_rounding "$HYPRLOCK" 0 "$OUR_ROUNDING"
-}
-
-revert_hyprlock() {
-  [[ -f $HYPRLOCK ]] || return 0
-  # Only ours if it is still exactly the value we wrote.
-  [[ $(field_rounding "$HYPRLOCK") == "$OUR_ROUNDING" ]] || return 0
-  set_field_rounding "$HYPRLOCK" "$OUR_ROUNDING" 0
-  rm -f "$STATE/hyprlock.conf.orig"
-}
-
 # ── fastfetch ─────────────────────────────────────────────────────────────
 # The logo and every module key point at "default", which emits ESC[39m — the
 # terminal's own foreground, and therefore the one colour in this theme that
@@ -267,11 +219,9 @@ revert_assets() {
 
 if [[ $THEME == "liquid-glass" ]]; then
   apply_assets
-  apply_hyprlock
   apply_fastfetch
 else
   revert_assets
-  revert_hyprlock
   revert_fastfetch
   note_if_absent
 fi
