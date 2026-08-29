@@ -117,5 +117,30 @@ run some-other-theme
 check "comment survives revert"  "$(cat "$H/.config/gtk-4.0/gtk.css")" '/* @import url("../omarchy/current/theme/gtk.css"); */'
 
 echo
+echo "8. Omarchy 4: absolute GTK shim paths, gtk3 from the theme copy"
+setup 8
+mkdir -p "$H/.local/state/omarchy/current/theme"
+printf '/* staged gtkcss */\n' >"$H/.local/state/omarchy/current/theme/gtk.css"
+run liquid-glass
+check "gtk4 shim is the staged abs path" \
+  "$(head -1 "$H/.config/gtk-4.0/gtk.css")" \
+  "@import url(\"$H/.local/state/omarchy/current/theme/gtk.css\");"
+check "gtk3 shim points at the theme copy" \
+  "$(cat "$H/.config/gtk-3.0/gtk.css")" \
+  "@import url(\"$H/.config/omarchy/themes/liquid-glass/gtk3.css\");"
+run some-other-theme
+check "gtk4 import removed on revert" \
+  "$([[ -e $H/.config/gtk-4.0/gtk.css ]] && echo present || echo gone)" "gone"
+
+echo
+echo "9. Omarchy 4: hyprlock is left alone (quickshell, not hyprlock)"
+setup 9
+mkdir -p "$H/.local/state/omarchy/current/theme"
+printf '/* staged gtkcss */\n' >"$H/.local/state/omarchy/current/theme/gtk.css"
+printf 'input-field {\n    rounding = 0\n}\n' >"$H/.config/hypr/hyprlock.conf"
+run liquid-glass
+check "rounding untouched" "$(sed -n 's/^ *rounding *= *//p' "$H/.config/hypr/hyprlock.conf")" "0"
+
+echo
 [[ $fail -eq 0 ]] && echo "all passed" || echo "FAILURES"
 exit $fail
