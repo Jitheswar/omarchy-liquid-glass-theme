@@ -46,6 +46,16 @@ Recent Omarchy 3.x ships 0.56.0. Earlier 3.x releases do not, so the version
 of Omarchy is not on its own the thing to check — `hyprctl version` is.
 Developed and verified against Hyprland 0.56.0 / Omarchy 3.8.4.
 
+Liquid Glass also runs on **Omarchy 4.x**. Omarchy 4 replaced waybar,
+swayosd, mako, walker and the `hyprland.conf`-sourced window rules with a
+quickshell bar and a staged, auto-loaded `hyprland.lua`. This theme ships
+both renderers: the original Omarchy 3 files and `shell.toml` + `hyprland.lua`
+for Omarchy 4, and the theme-set hook detects the major and uses the right
+GTK shim path. The lock differs too — Omarchy 4 locks through quickshell, so
+the hyprlock rounding is only applied on Omarchy 3. The palette values are
+identical across both, only the surface that consumes them differs. Developed
+and verified against Hyprland 0.56.2 / Omarchy 4.0.1.
+
 Nothing else is required. No plugin, no patched compositor, no `hyprpm`, no
 package outside what Omarchy already installs — clone it, set it, and every
 effect described below is running. That is a constraint the theme is built

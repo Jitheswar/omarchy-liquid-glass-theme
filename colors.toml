@@ -13,6 +13,15 @@
 # Everything Omarchy generates (btop, helix, obsidian, gum, chromium,
 # hyprlock…) is derived from these values.
 #
+# Liquid Glass works on both Omarchy 3 and 4, and the palette values are the
+# same for both — only the surface that consumes them differs. On Omarchy 4
+# the shell surfaces (bar, menu, notifications, OSD, lock) are themed by
+# shell.toml (read live by quickshell) and the window material by
+# hyprland.lua (staged and auto-loaded), both of which carry the low-alpha
+# white/black glass tokens inline. What follows here documents the Omarchy 3
+# renderer — waybar.css, walker.css and swayosd.css each spell these tokens
+# out inline, named in a comment above the declaration.
+#
 # ── Glass material tokens ─────────────────────────────────────────────────
 # These six carry no hue, and that is the single most important thing about
 # them. Glass has no colour of its own; it takes the colour of whatever is

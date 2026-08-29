@@ -46,13 +46,28 @@ OUR_ROUNDING=22
 THEME_DIR="$HOME/.config/omarchy/themes/liquid-glass"
 ICON_DIR="$HOME/.local/share/icons/LiquidGlass"
 
-# Two toolkits, two stylesheets, same mechanism. The relative path is resolved
-# against the directory the file sits in, so `../omarchy/...` reaches
-# ~/.config/omarchy from either ~/.config/gtk-4.0 or ~/.config/gtk-3.0.
+# Two toolkits, two stylesheets, same mechanism. The import points at the live
+# "current" theme, which lives in a different place on each Omarchy major:
+#
+#   - Omarchy 3 stages the active theme under ~/.config/omarchy/current/theme,
+#     so the relative ../omarchy/... resolves from either GTK stylesheet dir.
+#   - Omarchy 4 stages it under ~/.local/state/omarchy/current/theme (a config
+#     file is state, not something to rewrite under $HOME/.config), so the
+#     import has to be an absolute path. Omarchy 4 also stages gtk.css but NOT
+#     gtk3.css, so the GTK3 shim points at the theme's own copy.
+#
+# Detect which major we are on by where the live theme lives.
+OMARCHY4=0
 GTK4_CSS="$HOME/.config/gtk-4.0/gtk.css"
 GTK3_CSS="$HOME/.config/gtk-3.0/gtk.css"
-SHIM4='@import url("../omarchy/current/theme/gtk.css");'
-SHIM3='@import url("../omarchy/current/theme/gtk3.css");'
+if [[ -d $HOME/.local/state/omarchy/current/theme && ! -d $HOME/.config/omarchy/current ]]; then
+  OMARCHY4=1
+  SHIM4="@import url(\"$HOME/.local/state/omarchy/current/theme/gtk.css\");"
+  SHIM3="@import url(\"$HOME/.config/omarchy/themes/liquid-glass/gtk3.css\");"
+else
+  SHIM4='@import url("../omarchy/current/theme/gtk.css");'
+  SHIM3='@import url("../omarchy/current/theme/gtk3.css");'
+fi
 
 mkdir -p "$STATE"
 
@@ -191,6 +206,7 @@ set_field_rounding() {
 }
 
 apply_hyprlock() {
+  [[ $OMARCHY4 == 1 ]] && return 0   # Omarchy 4 lock is quickshell, not hyprlock
   [[ -f $HYPRLOCK ]] || return 0
   [[ $(field_rounding "$HYPRLOCK") == "0" ]] || return 0
   cp "$HYPRLOCK" "$STATE/hyprlock.conf.orig"
@@ -198,6 +214,7 @@ apply_hyprlock() {
 }
 
 revert_hyprlock() {
+  [[ $OMARCHY4 == 1 ]] && return 0   # Omarchy 4 lock is quickshell, not hyprlock
   [[ -f $HYPRLOCK ]] || return 0
   # Only ours if it is still exactly the value we wrote.
   [[ $(field_rounding "$HYPRLOCK") == "$OUR_ROUNDING" ]] || return 0

@@ -1,0 +1,180 @@
+# Liquid Glass — Omarchy 4 shell surfaces (quickshell).
+#
+# The glass material for the shell. Faces are white or black at low alpha and
+# nothing else — so each surface takes its colour from whatever is behind it,
+# which on a login is the wallpaper. There is no theme hue anywhere here.
+#
+# How the glass is built on a quickshell surface:
+#   - The face is a flat low-alpha white/black (this file cannot express a
+#     gradient face, so the lit lens is carried by Hyprland's blur instead,
+#     tuned in liquid-glass.lua: brightness 1.18, vibrancy 0.80).
+#   - The border is the SAME 90deg bevel gradient the window borders use
+#     (white at top falling to black at the base, via [hyprland] tokens), so
+#     a shell surface and a window agree about where the light is.
+#   - Corner radius is NOT set here: the shell reads Hyprland's
+#     `decoration:rounding` and inherits the squircle (liquid-glass.lua sets
+#     rounding = 20, rounding_power = 4.5), so panels and windows stay aligned.
+#
+# Alpha companions run 0 (invisible) to 1 (opaque).
+
+[bar]
+# The bar surface. Over the wallpaper this reads as a near-black lens; the
+# blur + the white->_black 90deg [hyprland] border below do the "lit" work.
+background       = "#E8E8E8"
+background-alpha = 0.10
+text             = "#F0F0F0"
+# Modules calling attention to themselves (recording, voxtype, updates).
+active           = "#FFFFFF"
+
+[hyprland]
+# Shared Hyprland-derived border tokens. Every surface references these so
+# lock, notifications, popups, and menu cards stay aligned with the window
+# border gradient. Same 90deg bevel as the window border in liquid-glass.lua:
+# lit at the top, falling away to near-black at the base.
+active-border            = "rgba(FFFFFFF2) rgba(FFFFFF99) rgba(80808066) rgba(000000CC) 90deg"
+active-border-foreground = "#E0E0E0"
+
+[controls]
+# Shared state tokens for interactive control chrome (buttons, dropdowns,
+# tab strips, etc). Each state is the neutral "lit edge" language: white text,
+# translucent white fill, hairline white border.
+normal-color        = "#E0E0E0"
+normal-fill-alpha   = 0.06
+normal-border       = "#FFFFFF"
+normal-border-width = 1
+normal-border-alpha = 0.30
+
+hover-cursor-color        = "#FFFFFF"
+hover-cursor-fill-alpha   = 0.10
+hover-cursor-border       = "#FFFFFF"
+hover-cursor-border-width = 1
+hover-cursor-border-alpha = 0.40
+
+focus-color        = "#FFFFFF"
+focus-fill-alpha   = 0.10
+focus-border       = "#FFFFFF"
+focus-border-width = 1
+focus-border-alpha = 0.40
+
+selected-color        = "#0A0A0A"
+selected-fill-alpha   = 0.22
+selected-border       = "#FFFFFF"
+selected-border-width = 0
+selected-border-alpha = 1.0
+
+pressed-fill-alpha   = 0.22
+selection-fill-alpha = 0.35
+
+[spacing]
+# Matches the original theme's roomier layout; glass wants to read as a
+# separate pane, not a tiled sheet.
+scale           = 1.0
+scale-with-font = true
+panel-gap       = 16
+panel-padding   = 18
+control-gap     = 8
+control-padding-x = 12
+control-padding-y = 8
+
+[font]
+base-size = 12
+
+[popups]
+# Bar flyouts — dropdowns, OSD, popup cards. Transparent lens face, bevel
+# border.
+background       = "#0A0A0A"
+background-alpha = 0.42
+text             = "#E6E6E6"
+border           = "rgba(FFFFFFC8) rgba(FFFFFF2E) 90deg"
+border-alpha     = 0.75
+
+[tooltip]
+# Hover tooltips across the bar, panels, and buttons. Kept a touch more
+# opaque than the bar so tooltips read as urgent without becoming a slab.
+background       = "#000000"
+background-alpha = 0.68
+text             = "#EDEDED"
+border           = "rgba(FFFFFFC8) rgba(FFFFFF2E) 90deg"
+border-alpha     = 0.75
+
+[notifications]
+# The notification cards. Same lens face as popups.
+background       = "#0A0A0A"
+background-alpha = 0.42
+text             = "#E6E6E6"
+border           = "rgba(FFFFFFC8) rgba(FFFFFF2E) 90deg"
+border-alpha     = 0.75
+countdown        = "#FFFFFF"
+
+[launcher]
+# The launcher overlay. This one opens over whatever you were looking at (not
+# just the wallpaper), so it is deliberately a little more opaque than the
+# other surfaces — the one place the theme trades "more glass" for legible
+# item text, documented at the site.
+background                = "#0A0A0A"
+background-alpha          = 0.44
+text                      = "#E6E6E6"
+border                    = "rgba(FFFFFFC8) rgba(FFFFFF2E) 90deg"
+border-alpha              = 0.75
+scrim                     = "#000000"
+scrim-alpha               = 0.50
+selected-background       = "#FFFFFF"
+selected-background-alpha = 0.10
+selected-text             = "#FFFFFF"
+selected-border           = "#FFFFFF"
+selected-border-alpha     = 0.25
+
+[menu]
+# Cards, rows, and selected-row treatment. Clipboard and emojis inherit these
+# tokens.
+background                = "#0A0A0A"
+background-alpha          = 0.46
+text                      = "#E6E6E6"
+border                    = "rgba(FFFFFFC8) rgba(FFFFFF2E) 90deg"
+border-alpha              = 0.75
+scrim                     = "#000000"
+scrim-alpha               = 0.50
+selected-background       = "#FFFFFF"
+selected-background-alpha = 0.10
+selected-text             = "#FFFFFF"
+selected-border           = "#FFFFFF"
+selected-border-alpha     = 0.25
+
+[polkit]
+# Authentication prompt (sudo/password). Lens face; error state is the one
+# place the theme carries a reading hue.
+background       = "#0A0A0A"
+background-alpha = 0.50
+text             = "#E6E6E6"
+text-error       = "#F2798F"
+border           = "rgba(FFFFFFC8) rgba(FFFFFF2E) 90deg"
+border-error     = "#F2798F"
+border-alpha     = 0.75
+scrim            = "#000000"
+scrim-alpha      = 0.50
+accent           = "#FFFFFF"
+
+[lock]
+# Lock screen password input. A transparent field over the blurred wallpaper.
+background       = "#0A0A0A"
+background-alpha = 0.35
+text             = "#EDEDED"
+placeholder      = "#9A9A9A"
+text-error       = "#F2798F"
+border           = "rgba(FFFFFFC8) rgba(FFFFFF2E) 90deg"
+border-active    = "rgba(FFFFFFF2) rgba(FFFFFF99) rgba(80808066) rgba(000000CC) 90deg"
+border-error     = "#F2798F"
+border-alpha     = 0.75
+selection        = "#FFFFFF"
+selection-alpha  = 0.35
+
+[image-picker]
+# Carousel-style picker. `scrim` is the full-screen wash; per-slice dims and
+# outlines track the foundational background.
+scrim                   = "#000000"
+scrim-alpha             = 0.50
+text                    = "#E0E0E0"
+selected-border         = "#FFFFFF"
+selected-border-alpha   = 0.35
+unselected-border       = "#FFFFFF"
+unselected-border-alpha = 0.18
