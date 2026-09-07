@@ -20,7 +20,7 @@ that survive are the ANSI 16, and only because `ls` needs a directory to look
 different from a file and `git diff` needs an addition to look different from a
 deletion. Those are readings, not decoration.
 
-![Liquid Glass](backgrounds/1-omarchy-liquid-glass.png)
+![Liquid Glass — the bar, terminals and launcher are white and black at low alpha, taking their colour from the wallpaper behind them](preview.png)
 
 ## Requirements
 
@@ -970,6 +970,8 @@ those lines before lowering it.
 
 Six, the same wordmark in six hues: jade, sapphire, amber, crimson, magenta,
 violet. `1-omarchy-liquid-glass.png` is the default.
+
+![The default jade wallpaper](backgrounds/1-omarchy-liquid-glass.png)
 
 They matter more here than in a normal theme. The surfaces carry no colour of
 their own, so whichever of these is up decides what the entire desktop looks
